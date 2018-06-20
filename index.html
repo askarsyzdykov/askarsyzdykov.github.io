@@ -28,7 +28,7 @@
                 <span></span>
                 </span>
             </div>
-            <div id="navbarMenu" class="navbar-menu">
+            <!-- <div id="navbarMenu" class="navbar-menu">
                 <div class="navbar-end">
                     <a class="navbar-item is-active">
                             Home
@@ -69,7 +69,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> -->
         </div>
     </nav>
     <!-- END NAV -->
@@ -92,98 +92,55 @@
                     <div class="card-content">
                         <div class="media">
                             <div class="media-content has-text-centered">
-                                <p class="title article-title">Introducing a new feature for paid subscribers</p>
+                                <p class="title article-title">Configure NodeMCU 1.0 ESP8266 (ESP-12E Module): with Arduino IDE.</p>
                                 <div class="tags has-addons level-item">
-                                    <span class="tag is-rounded is-info">@skeetskeet</span>
-                                    <span class="tag is-rounded">May 10, 2018</span>
+                                    <span class="tag is-rounded is-info">@askarsyzdykov</span>
+                                    <span class="tag is-rounded">Jun 20, 2018</span>
                                 </div>
                             </div>
                         </div>
                         <div class="content article-body">
-                            <p>Non arcu risus quis varius quam quisque. Dictum varius duis at consectetur lorem. Posuere sollicitudin aliquam ultrices sagittis orci a scelerisque purus semper. </p>
-                            <p>Metus aliquam eleifend mi in nulla posuere sollicitudin aliquam ultrices. In hac habitasse platea dictumst vestibulum rhoncus est pellentesque elit. Accumsan lacus vel facilisis volutpat. Non sodales neque sodales ut etiam.
-                                Est pellentesque elit ullamcorper dignissim cras tincidunt lobortis feugiat vivamus.</p>
-                            <h3 class="has-text-centered">How to properly center tags in bulma?</h3>
-                            <p> Proper centering of tags in bulma is done with class: <pre>level-item</pre>
-                                Voluptat ut farmacium tellus in metus vulputate. Feugiat in fermentum posuere urna nec. Pharetra convallis posuere morbi leo urna molestie.
-                                Accumsan lacus vel facilisis volutpat est velit egestas. Fermentum leo vel orci porta. Faucibus interdum posuere lorem ipsum.</p>
+                        	<p>STEPS:
+                        		<br>
+								<b>1.</b> Open Arduino IDE
+								    Go To File -> Preferences. Put following URL to "Additional Board Manager URL's"
+								   <a href="https://www.youtube.com/redirect?v=3gOKrMAz7WE&event=video_description&redir_token=M8hXLAYOkcJPBIUTRE_sroTkqCV8MTUyOTU1NTQwOEAxNTI5NDY5MDA4&q=http%3A%2F%2Farduino.esp8266.com%2Fstable%2Fpackage_esp8266com_index.json">link</a> and Click OK.
+								<br>
+								<b>2.</b> Go To Tools -> Board -> Boards Manager -> Search: Node
+								    Click on "esp8266"
+								    select version 2.4.1 or higher. Click on Install
+								<br>
+								<b>3.</b> Go to Following <a href="https://www.youtube.com/redirect?v=3gOKrMAz7WE&event=video_description&redir_token=M8hXLAYOkcJPBIUTRE_sroTkqCV8MTUyOTU1NTQwOEAxNTI5NDY5MDA4&q=https%3A%2F%2Fwww.silabs.com%2Fproducts%2Fdevelopment-tools%2Fsoftware%2Fusb-to-uart-bridge-vcp-drivers">Link</a> and Install respective Drivers
+								     
+								<br>
+								<b>4.</b> Go to System Preferences -> Security & Privacy -> General -> Allow
+								<br>
+								<b>5.</b> Restart Computer
+								<br>
+								<b>6.</b> Disconnect all connected Arduino boards
+								<br>
+								<b>7.</b> Connect NodeMCU to Laptop through MicroUSB cable
+								<br>
+								<b>8.</b> Open Arduino IDE, 
+								    Go To Tools -> Select Board: "NodeMCU 1.0 (ESP-12E Module)" 
+								<br>
+								<b>9.</b> Go To File -> Examples -> ESP8266 -> Blink 
+								<br>
+								<b>9.1.</b> Add this line above 'void setup()' line
+								<pre>#define LED_BUILTIN 2</pre>
+								<br>
+								<b>10.</b> Upload the Code
+								<br>
+								<b>11.</b> Done. Blue LED should Blink on NodeMCU Board With delay of 1 Sec.
+								<br>
+								<b>12.</b> Now NodeMCU is configured with your Arduino IDE.</p>
+								<br>
+								Copied (and appended) from description of <a href="https://www.youtube.com/watch?v=3gOKrMAz7WE">this video</a>
                         </div>
                     </div>
                 </div>
                 <!-- END ARTICLE -->
-                <!-- START ARTICLE -->
-                <div class="card article">
-                    <div class="card-content">
-                        <div class="media">
-                            <div class="media-center">
-                                <img src="http://www.radfaces.com/images/avatars/daria-morgendorffer.jpg" class="author-image" alt="Placeholder image">
-                            </div>
-                            <div class="media-content has-text-centered">
-                                <p class="title article-title">Sapien eget mi proin sed 🔱</p>
-                                <p class="subtitle is-6 article-subtitle">
-                                    <a href="#">@daria</a> on February 17, 2018
-                                </p>
-                            </div>
-                        </div>
-                        <div class="content article-body">
-                            <p>
-                                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Accumsan lacus vel facilisis volutpat est velit egestas. Sapien eget mi proin sed. Sit amet mattis vulputate enim.
-                            </p>
-                            <p>
-                                Commodo ullamcorper a lacus vestibulum sed arcu. Fermentum leo vel orci porta non. Proin fermentum leo vel orci porta non pulvinar. Imperdiet proin fermentum leo vel. Tortor posuere ac ut consequat semper viverra. Vestibulum lectus mauris ultrices eros.
-                            </p>
-                            <h3 class="has-text-centered">Lectus vestibulum mattis ullamcorper velit sed ullamcorper morbi. Cras tincidunt lobortis feugiat vivamus.</h3>
-                            <p>
-                                In eu mi bibendum neque egestas congue quisque egestas diam. Enim nec dui nunc mattis enim ut tellus. Ut morbi tincidunt augue interdum velit euismod in. At in tellus integer feugiat scelerisque varius morbi enim nunc. Vitae suscipit tellus mauris a diam.
-                                Arcu non sodales neque sodales ut etiam sit amet.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-                <!-- END ARTICLE -->
-                <!-- START PROMO BLOCK -->
-                <section class="hero is-info is-bold is-small promo-block">
-                    <div class="hero-body">
-                        <div class="container">
-                            <h1 class="title">
-                                <i class="fa fa-bell-o"></i> Nemo enim ipsam voluptatem quia.</h1>
-                            <span class="tag is-black is-medium is-rounded">
-                                    Natus error sit voluptatem
-                                </span>
-                        </div>
-                    </div>
-                </section>
-                <!-- END PROMO BLOCK -->
-                <!-- START ARTICLE -->
-                <div class="card article">
-                    <div class="card-content">
-                        <div class="media">
-                            <div class="media-center">
-                                <img src="http://www.radfaces.com/images/avatars/angela-chase.jpg" class="author-image" alt="Placeholder image">
-                            </div>
-                            <div class="media-content has-text-centered">
-                                <p class="title article-title">Cras tincidunt lobortis feugiat vivamus.</p>
-                                <p class="subtitle is-6 article-subtitle">
-                                    <a href="#">@angela</a> on October 7, 2017
-                                </p>
-                            </div>
-                        </div>
-                        <div class="content article-body">
-                            <p>
-                                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Accumsan lacus vel facilisis volutpat est velit egestas. Sapien eget mi proin sed. Sit amet mattis vulputate enim.
-                            </p>
-                            <p>
-                                Commodo ullamcorper a lacus vestibulum sed arcu. Fermentum leo vel orci porta non. Proin fermentum leo vel orci porta non pulvinar. Imperdiet proin fermentum leo vel. Tortor posuere ac ut consequat semper viverra. Vestibulum lectus mauris ultrices eros.
-                            </p>
-                            <h3 class="has-text-centered">“Everyone should be able to do one card trick, tell two jokes, and recite three poems, in case they are ever trapped in an elevator.”</h3>
-                            <p>
-                                In eu mi bibendum neque egestas congue quisque egestas diam. Enim nec dui nunc mattis enim ut tellus. Ut morbi tincidunt augue interdum velit euismod in. At in tellus integer feugiat scelerisque varius morbi enim nunc. Vitae suscipit tellus mauris a diam.
-                                Arcu non sodales neque sodales ut etiam sit amet.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-                <!-- END ARTICLE -->
+
         </section>
         <!-- END ARTICLE FEED -->
         </div>
