@@ -1,6 +1,6 @@
 title: "Мой сайт"
 description: "Лендинг + блог"
-url: "https://mysite.com"   # поменяй на свой домен
+url: "https://blog.evpoint.kz"   # поменяй на свой домен
 baseurl: ""                 # если блог будет на blog.mysite.com — оставь пустым
 
 theme: minima
