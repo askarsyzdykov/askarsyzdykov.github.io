@@ -1,10 +1,26 @@
-title: "Мой сайт"
-description: "Лендинг + блог"
-url: "https://blog.evpoint.kz"   # поменяй на свой домен
-baseurl: ""                 # если блог будет на blog.mysite.com — оставь пустым
+title: "evPoint.kz"
+description: ""
+url: "https://blog.evpoint.kz"
+baseurl: ""
 
 theme: minima
 
 plugins:
   - jekyll-feed
   - jekyll-sitemap
+  - jekyll-seo-tag
+
+author:
+  name: "evPoint.kz"
+  email: "info@evpoint.kz"
+
+# 🗺️ Локализация (для поиска)
+lang: "ru"
+timezone: "Asia/Almaty"
+
+# 🔍 Дополнительно: чтобы GitHub Pages не ругался
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
