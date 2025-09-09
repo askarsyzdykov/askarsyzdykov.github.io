@@ -1,6 +1,9 @@
-theme: jekyll-theme-minimal
-title: Блог evPoint.kz
-description: Новости Казахстана на тему электромобилей и гибридов, а также приложения evPoint.kz
+title: "Мой сайт"
+description: "Лендинг + блог"
+url: "https://mysite.com"   # поменяй на свой домен
+baseurl: ""                 # если блог будет на blog.mysite.com — оставь пустым
+
+theme: minima
 
 plugins:
   - jekyll-feed
