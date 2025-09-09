@@ -10,7 +10,7 @@ plugins:
   - jekyll-sitemap
   - jekyll-seo-tag
 
-author: John Smith
+author: Askar Syzdykov
 
 # 🗺️ Локализация (для поиска)
 lang: "ru"
