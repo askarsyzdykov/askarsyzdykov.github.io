@@ -1,3 +1,7 @@
 theme: jekyll-theme-minimal
 title: Блог evPoint.kz
 description: Новости Казахстана на тему электромобилей и гибридов, а также приложения evPoint.kz
+
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
