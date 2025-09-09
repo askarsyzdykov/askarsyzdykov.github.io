@@ -10,9 +10,7 @@ plugins:
   - jekyll-sitemap
   - jekyll-seo-tag
 
-author:
-  name: "evPoint.kz"
-  email: "info@evpoint.kz"
+author: John Smith
 
 # 🗺️ Локализация (для поиска)
 lang: "ru"
