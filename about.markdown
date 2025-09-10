@@ -2,6 +2,7 @@
 layout: page
 title: "О проекте"
 permalink: /about/
+nav: true
 ---
 
 ## Привет!
