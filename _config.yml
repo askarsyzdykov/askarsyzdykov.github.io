@@ -1,4 +1,4 @@
-title: "evPoint.kz"
+title: ""
 description: ""
 url: "https://blog.evpoint.kz"
 baseurl: ""
@@ -11,6 +11,7 @@ plugins:
   - jekyll-seo-tag
 
 author: Askar Syzdykov
+email: info@evpoint.kz
 
 # 🗺️ Локализация (для поиска)
 lang: "ru"
