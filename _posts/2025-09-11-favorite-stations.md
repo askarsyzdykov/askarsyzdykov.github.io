@@ -21,6 +21,8 @@ tags: [evPoint.kz, электромобиль, зарядные станции, 
 ## Как это будет выглядеть?  
 
 Смотрите демо на YouTube 👇
-[![Смотреть демо на YouTube](https://img.youtube.com/vi/OdYTWYVKmlE/maxresdefault.jpg)](https://www.youtube.com/shorts/OdYTWYVKmlE)  
+<a href="https://www.youtube.com/shorts/OdYTWYVKmlE" target="_blank">
+  <img src="https://img.youtube.com/vi/OdYTWYVKmlE/maxresdefault.jpg" alt="Смотреть демо на YouTube" />
+</a>  
 
 Оставайтесь с нами — впереди ещё больше полезных обновлений! 🚀  
