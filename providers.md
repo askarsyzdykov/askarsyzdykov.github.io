@@ -17,6 +17,7 @@ nav: true
 - **Arman**  
 - **Blue Sky**  
 - **Charge24**  
+- **eDrive.kz**
 - **EVS**  
 - **Faraday charger**  
 - **GreenCars**  
@@ -30,7 +31,6 @@ nav: true
 - **Tol.Charge**  
 - **VoltSpot**  
 - **Voltau**  
-- **eDrive.kz**
 
 ---
 
