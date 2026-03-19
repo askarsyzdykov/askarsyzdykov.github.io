@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+    content="FAQ о приложении evPoint.kz — более 1000 зарядных станций по всему Казахстану. Узнайте, как пользоваться приложением и находить зарядки.">
+  <title>FAQ — evPoint.kz</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 900px;
+      margin: auto;
+      padding: 20px;
+      background: #f7f9fc;
+    }
+
+    h1 {
+      font-size: 32px;
+      text-align: center;
+      margin-bottom: 30px;
+      color: #222;
+    }
+
+    .faq-item {
+      background: #fff;
+      margin-bottom: 12px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+      overflow: hidden;
+      border-left: 4px solid #0078ff;
+      transition: border-color 0.3s;
+    }
+
+    .faq-item:hover {
+      border-left-color: #00b84a;
+    }
+
+    summary {
+      display: flex;
+      align-items: center;
+      /* вертикальное выравнивание */
+      gap: 12px;
+      padding: 16px;
+      font-size: 18px;
+      font-weight: bold;
+      list-style: none;
+      outline: none;
+    }
+
+    summary::after {
+      content: '+';
+      margin-left: auto;
+      /* уводим вправо */
+      font-size: 20px;
+      line-height: 1;
+      transition: transform .3s;
+      flex-shrink: 0;
+    }
+
+    summary::-webkit-details-marker {
+      display: none;
+    }
+
+    details[open] summary:after {
+      transform: rotate(45deg);
+    }
+
+    details div {
+      padding: 0 16px 16px;
+      font-size: 16px;
+      color: #444;
+      line-height: 1.5;
+    }
+
+    a {
+      color: #0078ff;
+      text-decoration: underline;
+    }
+
+    a:hover {
+      color: #00b84a;
+    }
+  </style>
+  <!-- SEO: FAQ structured data -->
+  <script type="application/ld+json" id="faq-schema"></script>
+</head>
+
+<body>
+  <div id="faq-container">Загрузка...</div>
+
+  <script>
+    async function loadFAQ(lang) {
+      try {
+        const res = await fetch('faq.json');
+        const data = await res.json();
+        const items = data[lang] || data['ru'];
+
+        // Функция для автоматического превращения email/ссылок в кликабельные
+        const linkify = (text) => {
+          const urlPattern = /(https?:\/\/[^\s]+)/g;
+          const emailPattern = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
+          return text
+            .replace(urlPattern, '<a href="$1" target="_blank" rel="noopener">$1</a>')
+            .replace(emailPattern, '<a href="mailto:$1">$1</a>');
+        };
+
+        // HTML вывод
+        const faqHtml = items.map(item =>
+          `<details class="faq-item">
+              <summary>${item.q}</summary>
+              <div>${linkify(item.a)}</div>
+            </details>
+          `).join('');
+        document.getElementById('faq-container').innerHTML = faqHtml;
+
+        // SEO schema.org JSON-LD
+        const faqSchema = {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": items.map(i => ({
+            "@type": "Question",
+            "name": i.q,
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": i.a
+            }
+          }))
+        };
+        document.getElementById('faq-schema').textContent = JSON.stringify(faqSchema, null, 2);
+      } catch (err) {
+        document.getElementById('faq-container').innerHTML = 'Ошибка загрузки FAQ';
+      }
+    }
+
+    function getLangFromQuery() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('lang') || 'ru';
+    }
+
+    // Функция для замены email/URL на ссылки
+    function linkify(text) {
+      const urlPattern = /(https?:\/\/[^\s]+)/g;
+      const emailPattern = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
+      return text
+        .replace(urlPattern, '<a href="$1" target="_blank">$1</a>')
+        .replace(emailPattern, '<a href="mailto:$1">$1</a>');
+    }
+
+    loadFAQ(getLangFromQuery());
+  </script>
+</body>
+
+</html>

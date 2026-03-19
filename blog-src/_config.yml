@@ -1,0 +1,30 @@
+title: ""
+description: ""
+url: "https://evpoint.kz"
+baseurl: "/blog"
+
+theme: minima
+
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+  # - jekyll-seo-tag
+
+author: Askar Syzdykov
+email: info@evpoint.kz
+
+# 🗺️ Локализация (для поиска)
+lang: "ru"
+timezone: "Asia/Almaty"
+
+# 🔍 Дополнительно: чтобы GitHub Pages не ругался
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
+  - CNAME
+  - robots.txt
+  - Dockerfile
+  - docker-compose.yml
+  - .DS_Store

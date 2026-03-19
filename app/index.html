@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <title>evPoint.kz</title>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      var userAgent = navigator.userAgent || navigator.vendor || window.opera;
+
+      // Ссылки на магазины
+      var iosUrl = "https://apps.apple.com/app/evpoint-kz/id6503088473";
+      var androidUrl = "https://play.google.com/store/apps/details?id=kz.mobdev.evchargers";
+      var fallbackUrl = "https://evpoint.kz";
+
+      var isIOS = /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream;
+      // Проверка для iPad на iPadOS 13+ (desktop UA + touch)
+      var isIPadOS = (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+      if (isIOS || isIPadOS) {
+        window.location.href = iosUrl;
+      } else if (/android/i.test(userAgent)) {
+        window.location.href = androidUrl;
+      } else {
+        window.location.href = fallbackUrl;
+      }
+    });
+  </script>
+</head>
+
+<body>
+  <p>Переадресация...</p>
+</body>
+
+</html>

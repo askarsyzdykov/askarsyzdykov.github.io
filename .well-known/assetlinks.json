@@ -1,0 +1,9 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "kz.mobdev.evchargers",
+    "sha256_cert_fingerprints":
+    ["9F:91:BF:A9:9A:6C:42:15:5A:7B:8F:0C:D6:32:D6:3A:CB:9C:6A:4C:1E:7E:03:9C:55:92:E6:5E:8D:CB:FA:27", "91:87:37:89:19:E2:B6:6D:DE:7B:84:C2:C0:37:0A:1A:49:65:4B:CB:56:9F:09:71:F4:18:18:F4:3F:96:91:61", "B4:19:5B:F8:02:7A:CF:FF:30:A3:77:5C:53:91:6F:C2:C9:6F:A0:2A:E0:0D:EA:E2:A0:D2:C0:E2:BE:A3:BF:F1"]
+  }
+}]
