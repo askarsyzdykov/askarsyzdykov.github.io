@@ -70,3 +70,39 @@ description: "Узнайте, как построить маршрут для э
 ## Попробуйте построить маршрут
 
 Откройте **[evPoint.kz](https://evpoint.kz/app)** и проверьте, как работает **построение маршрута с зарядными станциями**. Если вы регулярно ездите на электромобиле, такая функция помогает экономить время и увереннее планировать дорогу.
+
+## Смотрите видео
+
+Если хотите посмотреть, как это выглядит в приложении, откройте видео на YouTube:
+
+<div
+  id="route-video-embed"
+  style="position: relative; width: 100%; max-width: 720px; margin: 1rem auto 0; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 12px; background: #000;"
+>
+  <button
+    type="button"
+    aria-label="Воспроизвести видео о построении маршрута в evPoint.kz"
+    onclick="(function(){var root=document.getElementById('route-video-embed'); if(!root||root.dataset.loaded==='true') return; root.dataset.loaded='true'; root.innerHTML='<iframe src=&quot;https://www.youtube.com/embed/dj6iyp2cUYs?autoplay=1&quot; title=&quot;Видео о построении маршрута в evPoint.kz&quot; loading=&quot;eager&quot; allow=&quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share&quot; referrerpolicy=&quot;strict-origin-when-cross-origin&quot; allowfullscreen style=&quot;width:100%;height:100%;border:0;&quot;></iframe>';})();"
+    style="all: unset; cursor: pointer; display: block; width: 100%; height: 100%; position: relative;"
+  >
+    <img
+      src="https://img.youtube.com/vi/dj6iyp2cUYs/maxresdefault.jpg"
+      alt="Видео о построении маршрута в evPoint.kz"
+      loading="lazy"
+      decoding="async"
+      style="width: 100%; height: 100%; object-fit: cover; display: block;"
+    />
+    <span
+      aria-hidden="true"
+      style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: linear-gradient(to top, rgba(0, 0, 0, 0.32), rgba(0, 0, 0, 0.12));"
+    >
+      <span
+        style="width: 84px; height: 60px; border-radius: 18px; background: rgba(255, 0, 0, 0.92); display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);"
+      >
+        <span
+          style="margin-left: 4px; width: 0; height: 0; border-top: 12px solid transparent; border-bottom: 12px solid transparent; border-left: 20px solid #fff;"
+        ></span>
+      </span>
+    </span>
+  </button>
+</div>
