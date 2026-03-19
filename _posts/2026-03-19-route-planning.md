@@ -12,12 +12,12 @@ description: "Узнайте, как построить маршрут для э
 <figure style="margin: 1.5rem 0;">
   <div style="display: flex; gap: 16px; justify-content: center; align-items: flex-start; flex-wrap: wrap;">
     <img
-      src="/assets/images/route-planning-screen-1.png"
+      src="/assets/images/route-planning-screen-1.webp"
       alt="Экран маршрута с отмеченными зарядными станциями в evPoint.kz"
       style="max-width: 260px; width: 100%; height: auto;"
     />
     <img
-      src="/assets/images/route-planning-screen-2.png"
+      src="/assets/images/route-planning-screen-2.webp"
       alt="Экран построения маршрута для электромобиля в приложении evPoint.kz"
       style="max-width: 260px; width: 100%; height: auto;"
     />
