@@ -9,6 +9,24 @@ description: "Узнайте, как построить маршрут для э
 
 Планируете дальнюю поездку на электромобиле? В **[evPoint.kz](https://evpoint.kz/app)** можно **строить маршрут с учетом зарядных станций**, чтобы заранее понимать, где удобно остановиться на зарядку и сколько точек доступно по пути.
 
+<figure style="margin: 1.5rem 0;">
+  <div style="display: flex; gap: 16px; justify-content: center; align-items: flex-start; flex-wrap: wrap;">
+    <img
+      src="/assets/images/route-planning-screen-1.png"
+      alt="Экран маршрута с отмеченными зарядными станциями в evPoint.kz"
+      style="max-width: 260px; width: 100%; height: auto;"
+    />
+    <img
+      src="/assets/images/route-planning-screen-2.png"
+      alt="Экран построения маршрута для электромобиля в приложении evPoint.kz"
+      style="max-width: 260px; width: 100%; height: auto;"
+    />
+  </div>
+  <figcaption style="margin-top: 0.75rem; text-align: center; font-size: 0.95rem; color: #666;">
+    Построение маршрута и просмотр зарядных станций по пути в приложении evPoint.kz.
+  </figcaption>
+</figure>
+
 ## Как построить маршрут в evPoint.kz
 
 В приложении достаточно выбрать начальную и конечную точки, после чего **evPoint.kz покажет маршрут для электромобиля** и поможет найти подходящие зарядные станции по дороге.
