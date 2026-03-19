@@ -2,3 +2,4 @@ User-agent: *
 Disallow:
 Sitemap: https://evpoint.kz/sitemap.xml
 Sitemap: https://evpoint.kz/blog/sitemap.xml
+Sitemap: https://evpoint.kz/stations-sitemap.xml

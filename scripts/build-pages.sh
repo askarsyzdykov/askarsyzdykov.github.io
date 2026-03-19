@@ -33,4 +33,6 @@ rsync -a \
   bundle exec jekyll build --destination "$BLOG_DIR"
 )
 
+node "$ROOT_DIR/scripts/generate-station-pages.js" "data/stations.json" "$BUILD_DIR"
+
 touch "$BUILD_DIR/.nojekyll"
