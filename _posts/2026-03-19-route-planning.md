@@ -14,11 +14,23 @@ description: "Узнайте, как построить маршрут для э
     <img
       src="/assets/images/route-planning-screen-1.webp"
       alt="Экран маршрута с отмеченными зарядными станциями в evPoint.kz"
+      width="520"
+      height="1099"
+      sizes="(max-width: 600px) 100vw, 260px"
+      loading="eager"
+      decoding="async"
+      fetchpriority="high"
       style="max-width: 260px; width: 100%; height: auto;"
     />
     <img
       src="/assets/images/route-planning-screen-2.webp"
       alt="Экран построения маршрута для электромобиля в приложении evPoint.kz"
+      width="520"
+      height="1099"
+      sizes="(max-width: 600px) 100vw, 260px"
+      loading="lazy"
+      decoding="async"
+      fetchpriority="low"
       style="max-width: 260px; width: 100%; height: auto;"
     />
   </div>
