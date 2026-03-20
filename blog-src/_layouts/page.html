@@ -1,0 +1,16 @@
+---
+layout: default
+---
+<article class="article article--page">
+  <header class="article-header">
+    <p class="article-header__eyebrow">Раздел</p>
+    <h1>{{ page.title | escape }}</h1>
+    {% if page.description %}
+      <p class="article-header__lead">{{ page.description }}</p>
+    {% endif %}
+  </header>
+
+  <div class="article-content">
+    {{ content }}
+  </div>
+</article>

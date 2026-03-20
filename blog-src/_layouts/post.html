@@ -1,0 +1,29 @@
+---
+layout: default
+---
+<article class="article">
+  <header class="article-header">
+    <p class="article-header__eyebrow">Материал evPoint.kz</p>
+    <h1>{{ page.title | escape }}</h1>
+    <div class="article-header__meta">
+      <time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%d.%m.%Y" }}</time>
+      {% if page.author %}
+        <span>{{ page.author }}</span>
+      {% endif %}
+    </div>
+    {% if page.description %}
+      <p class="article-header__lead">{{ page.description }}</p>
+    {% endif %}
+    {% if page.tags and page.tags.size > 0 %}
+      <ul class="tag-list" aria-label="Теги публикации">
+        {% for tag in page.tags %}
+          <li>{{ tag }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  </header>
+
+  <div class="article-content">
+    {{ content }}
+  </div>
+</article>

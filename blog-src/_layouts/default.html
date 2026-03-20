@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="{{ page.lang | default: site.lang | default: 'ru' }}">
+  {% include head.html %}
+  <body>
+    <div class="shell">
+      <aside class="shell-sidebar">
+        <div class="shell-sidebar__inner">
+          <a class="brand" href="{{ '/' }}">
+            <span class="brand__title">{{ site.title }}</span>
+            <span class="brand__description">{{ site.description }}</span>
+          </a>
+
+          <nav class="sidebar-nav" aria-label="Основная навигация">
+            <a href="{{ '/' | relative_url }}" {% if page.url == '/' %}aria-current="page"{% endif %}>Блог</a>
+            {% for nav_page in site.pages %}
+              {% if nav_page.nav == true and nav_page.url != '/' %}
+                <a href="{{ nav_page.url | relative_url }}" {% if nav_page.url == page.url %}aria-current="page"{% endif %}>{{ nav_page.title | escape }}</a>
+              {% endif %}
+            {% endfor %}
+          </nav>
+
+          <div class="sidebar-links">
+            <a href="{{ site.url }}/stations/">Станции</a>
+            <a href="{{ site.url }}/faq/">FAQ</a>
+          </div>
+        </div>
+      </aside>
+
+      <main class="shell-main">
+        {{ content }}
+      </main>
+    </div>
+  </body>
+</html>

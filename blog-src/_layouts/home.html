@@ -1,0 +1,32 @@
+---
+layout: default
+---
+<section class="hero">
+  <p class="hero__eyebrow">Блог о зарядной инфраструктуре и электромобилях</p>
+  <h1>{{ page.title | default: site.title }}</h1>
+  <p class="hero__lead">
+    Короткие разборы, обновления продукта и практические материалы про поездки,
+    зарядку и инфраструктуру электромобилей в Казахстане.
+  </p>
+</section>
+
+<section class="post-feed" aria-label="Последние публикации">
+  {% assign posts = site.posts | sort: 'date' | reverse %}
+  {% for post in posts %}
+    <article class="post-card">
+      <div class="post-card__meta">
+        <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%d.%m.%Y" }}</time>
+        {% if post.tags and post.tags.size > 0 %}
+          <span>{{ post.tags | slice: 0, 2 | join: " · " }}</span>
+        {% endif %}
+      </div>
+      <h2><a href="{{ post.url | relative_url }}">{{ post.title | escape }}</a></h2>
+      {% if post.description %}
+        <p>{{ post.description }}</p>
+      {% else %}
+        <p>{{ post.excerpt | strip_html | truncate: 220 }}</p>
+      {% endif %}
+      <a class="post-card__link" href="{{ post.url | relative_url }}">Читать материал</a>
+    </article>
+  {% endfor %}
+</section>
