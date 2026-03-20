@@ -122,6 +122,21 @@
 			</div>
 		</div>
 	</div>
+	<script>
+		document.addEventListener("DOMContentLoaded", function () {
+			var toggler = document.querySelector(".navbar-toggler");
+			var menu = document.getElementById("navbarSupportedContent");
+
+			if (!toggler || !menu) {
+				return;
+			}
+
+			toggler.addEventListener("click", function () {
+				var isOpen = menu.classList.toggle("show");
+				toggler.setAttribute("aria-expanded", isOpen ? "true" : "false");
+			});
+		});
+	</script>
 </body>
 
 </html>
