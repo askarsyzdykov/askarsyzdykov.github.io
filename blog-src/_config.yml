@@ -1,21 +1,28 @@
-title: ""
-description: ""
+title: "evPoint.kz"
+description: "Карта зарядных станций для электромобилей в Казахстане, блог об электромобилях и каталог операторов зарядной инфраструктуры."
 url: "https://evpoint.kz"
 baseurl: "/blog"
+logo: "/favicon.svg"
 
 theme: minima
 
 plugins:
   - jekyll-feed
   - jekyll-sitemap
-  # - jekyll-seo-tag
+  - jekyll-seo-tag
 
-author: Askar Syzdykov
+author:
+  name: Askar Syzdykov
 email: info@evpoint.kz
 
 # 🗺️ Локализация (для поиска)
 lang: "ru"
 timezone: "Asia/Almaty"
+
+social:
+  name: evPoint.kz
+  links:
+    - https://evpoint.kz
 
 # 🔍 Дополнительно: чтобы GitHub Pages не ругался
 exclude:

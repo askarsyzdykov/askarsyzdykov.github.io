@@ -1,155 +1,349 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description"
-    content="FAQ о приложении evPoint.kz — более 1000 зарядных станций по всему Казахстану. Узнайте, как пользоваться приложением и находить зарядки.">
-  <title>FAQ — evPoint.kz</title>
+  <title>FAQ evPoint.kz</title>
+  <meta name="description" content="FAQ о приложении evPoint.kz: как искать зарядные станции в Казахстане, фильтровать точки, строить маршруты и передавать данные о новых станциях.">
+  <link rel="canonical" href="https://evpoint.kz/faq/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="FAQ evPoint.kz">
+  <meta property="og:description" content="Ответы на частые вопросы о приложении evPoint.kz и зарядных станциях для электромобилей в Казахстане.">
+  <meta property="og:url" content="https://evpoint.kz/faq/">
+  <meta property="og:image" content="https://evpoint.kz/assets/images/preview3.png">
+  <meta property="og:site_name" content="evPoint.kz">
+  <meta name="robots" content="index,follow">
   <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f7fb;
+      --surface: #ffffff;
+      --text: #1f2937;
+      --muted: #526071;
+      --accent: #0f766e;
+      --line: #d8e1ea;
+      --shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+    }
+    * { box-sizing: border-box; }
     body {
-      font-family: Arial, sans-serif;
-      max-width: 900px;
-      margin: auto;
-      padding: 20px;
-      background: #f7f9fc;
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background: linear-gradient(180deg, #eef4ff 0%, var(--bg) 100%);
     }
-
+    main {
+      width: min(920px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 32px 0 56px;
+    }
+    .shell {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      padding: 28px;
+    }
+    .topbar, .lang-switch {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .topbar a, .lang-switch a {
+      color: var(--accent);
+      text-decoration: none;
+    }
     h1 {
-      font-size: 32px;
-      text-align: center;
-      margin-bottom: 30px;
-      color: #222;
+      margin: 0 0 12px;
+      font-size: clamp(32px, 5vw, 46px);
     }
-
+    .lead {
+      margin: 0 0 24px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    .faq-language[hidden] {
+      display: none;
+    }
     .faq-item {
       background: #fff;
       margin-bottom: 12px;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+      border-radius: 14px;
+      border: 1px solid var(--line);
       overflow: hidden;
-      border-left: 4px solid #0078ff;
-      transition: border-color 0.3s;
     }
-
-    .faq-item:hover {
-      border-left-color: #00b84a;
-    }
-
     summary {
       display: flex;
       align-items: center;
-      /* вертикальное выравнивание */
       gap: 12px;
-      padding: 16px;
+      padding: 16px 18px;
       font-size: 18px;
-      font-weight: bold;
+      font-weight: 600;
       list-style: none;
-      outline: none;
+      cursor: pointer;
     }
-
     summary::after {
-      content: '+';
+      content: "+";
       margin-left: auto;
-      /* уводим вправо */
       font-size: 20px;
       line-height: 1;
-      transition: transform .3s;
-      flex-shrink: 0;
+      transition: transform .2s ease;
     }
-
-    summary::-webkit-details-marker {
-      display: none;
-    }
-
-    details[open] summary:after {
-      transform: rotate(45deg);
-    }
-
+    summary::-webkit-details-marker { display: none; }
+    details[open] summary::after { transform: rotate(45deg); }
     details div {
-      padding: 0 16px 16px;
-      font-size: 16px;
-      color: #444;
-      line-height: 1.5;
+      padding: 0 18px 18px;
+      color: var(--muted);
+      line-height: 1.65;
     }
-
-    a {
-      color: #0078ff;
-      text-decoration: underline;
-    }
-
-    a:hover {
-      color: #00b84a;
+    footer {
+      margin-top: 24px;
+      color: var(--muted);
+      line-height: 1.6;
     }
   </style>
-  <!-- SEO: FAQ structured data -->
-  <script type="application/ld+json" id="faq-schema"></script>
-</head>
-
-<body>
-  <div id="faq-container">Загрузка...</div>
-
-  <script>
-    async function loadFAQ(lang) {
-      try {
-        const res = await fetch('faq.json');
-        const data = await res.json();
-        const items = data[lang] || data['ru'];
-
-        // Функция для автоматического превращения email/ссылок в кликабельные
-        const linkify = (text) => {
-          const urlPattern = /(https?:\/\/[^\s]+)/g;
-          const emailPattern = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
-          return text
-            .replace(urlPattern, '<a href="$1" target="_blank" rel="noopener">$1</a>')
-            .replace(emailPattern, '<a href="mailto:$1">$1</a>');
-        };
-
-        // HTML вывод
-        const faqHtml = items.map(item =>
-          `<details class="faq-item">
-              <summary>${item.q}</summary>
-              <div>${linkify(item.a)}</div>
-            </details>
-          `).join('');
-        document.getElementById('faq-container').innerHTML = faqHtml;
-
-        // SEO schema.org JSON-LD
-        const faqSchema = {
-          "@context": "https://schema.org",
-          "@type": "FAQPage",
-          "mainEntity": items.map(i => ({
-            "@type": "Question",
-            "name": i.q,
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": i.a
-            }
-          }))
-        };
-        document.getElementById('faq-schema').textContent = JSON.stringify(faqSchema, null, 2);
-      } catch (err) {
-        document.getElementById('faq-container').innerHTML = 'Ошибка загрузки FAQ';
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Что такое evPoint.kz?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "evPoint.kz — агрегатор зарядных станций в Казахстане. Мы собираем точки разных операторов и показываем их на одной карте."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Сколько станций в приложении?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Более 1000+ точек по всему Казахстану. Список регулярно обновляется."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Чем evPoint.kz отличается от приложений операторов?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Мы показываем станции разных провайдеров в одном месте. Оплата/бронь выполняются в приложении оператора (если доступны)."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Нужна ли регистрация?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Нет, пользоваться можно без аккаунта. В будущем авторизация может дать дополнительные возможности."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Есть оффлайн-режим?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Да. Карта и список станций доступны оффлайн с последнего обновления данных."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Как фильтровать станции по провайдеру и разъёму?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Откройте фильтры и выберите нужные операторы и типы разъёмов (CCS2, Type 2, GBT, CHAdeMO и т.д.)."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Можно ли забронировать станцию?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Через evPoint.kz — нет. Если оператор поддерживает бронь, это делается в его приложении."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Почему в приложении нет цен?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Тарифы задаёт оператор станции. Мы показываем данные, если они доступны публично."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Как проложить маршрут с учётом зарядок?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Выберите станцию и нажмите «Навигация» — маршрут откроется в вашем навигаторе."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Поддерживаются Apple CarPlay и Android Auto?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Да, evPoint.kz поддерживает CarPlay и Android Auto."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Откуда берутся данные и насколько они точные?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Из открытых источников и от операторов. Мы обновляем базу регулярно, но рекомендуем проверять детали у оператора."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Станции на карте не совпадают с реальностью. Что делать?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Нажмите «Сообщить об ошибке» на карточке станции или напишите на support@evpoint.kz (укажите адрес и фото/скрин)."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Можно ли добавить свою станцию?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Да. Напишите на partners@evpoint.kz — пришлём формат данных или API."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Работает ли evPoint.kz за пределами Казахстана?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Фокус — Казахстан. Поддержка других стран может появиться позже."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Зачем нужен доступ к геолокации?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Чтобы показывать ближайшие станции и строить маршруты. Локация не передаётся третьим лицам."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Как часто обновляются данные?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Справочник и точки обновляются регулярно; онлайн-статусы зависят от открытости данных операторов."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Куда писать по сотрудничеству и вопросам СМИ?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Пишите на hello@evpoint.kz."
       }
     }
+  ]
+}
+  </script>
+</head>
+<body>
+  <main>
+    <div class="shell">
+      <nav class="topbar">
+        <a href="/">Главная</a>
+        <a href="/stations/">Станции</a>
+        <a href="/blog/">Блог</a>
+      </nav>
+      <div class="lang-switch">
+        <a href="/faq/?lang=ru">Рус</a>
+        <a href="/faq/?lang=kk">Қаз</a>
+        <a href="/faq/?lang=en">Eng</a>
+      </div>
+      <p class="lead">Ответы на частые вопросы о приложении evPoint.kz, поиске зарядных станций, фильтрах, маршрутах и обновлении базы по Казахстану.</p>
 
-    function getLangFromQuery() {
-      const params = new URLSearchParams(window.location.search);
-      return params.get('lang') || 'ru';
-    }
+      <section class="faq-language" data-lang="ru">
+        <h1>FAQ evPoint.kz</h1>
+        <details class="faq-item"><summary>Что такое evPoint.kz?</summary><div><p>evPoint.kz — агрегатор зарядных станций в Казахстане. Мы собираем точки разных операторов и показываем их на одной карте.</p></div></details>
+        <details class="faq-item"><summary>Сколько станций в приложении?</summary><div><p>Более 1000+ точек по всему Казахстану. Список регулярно обновляется.</p></div></details>
+        <details class="faq-item"><summary>Чем evPoint.kz отличается от приложений операторов?</summary><div><p>Мы показываем станции разных провайдеров в одном месте. Оплата/бронь выполняются в приложении оператора (если доступны).</p></div></details>
+        <details class="faq-item"><summary>Нужна ли регистрация?</summary><div><p>Нет, пользоваться можно без аккаунта. В будущем авторизация может дать дополнительные возможности.</p></div></details>
+        <details class="faq-item"><summary>Есть оффлайн-режим?</summary><div><p>Да. Карта и список станций доступны оффлайн с последнего обновления данных.</p></div></details>
+        <details class="faq-item"><summary>Как фильтровать станции по провайдеру и разъёму?</summary><div><p>Откройте фильтры и выберите нужные операторы и типы разъёмов (CCS2, Type 2, GBT, CHAdeMO и т.д.).</p></div></details>
+        <details class="faq-item"><summary>Можно ли забронировать станцию?</summary><div><p>Через evPoint.kz — нет. Если оператор поддерживает бронь, это делается в его приложении.</p></div></details>
+        <details class="faq-item"><summary>Почему в приложении нет цен?</summary><div><p>Тарифы задаёт оператор станции. Мы показываем данные, если они доступны публично.</p></div></details>
+        <details class="faq-item"><summary>Как проложить маршрут с учётом зарядок?</summary><div><p>Выберите станцию и нажмите «Навигация» — маршрут откроется в вашем навигаторе.</p></div></details>
+        <details class="faq-item"><summary>Поддерживаются Apple CarPlay и Android Auto?</summary><div><p>Да, evPoint.kz поддерживает CarPlay и Android Auto.</p></div></details>
+        <details class="faq-item"><summary>Откуда берутся данные и насколько они точные?</summary><div><p>Из открытых источников и от операторов. Мы обновляем базу регулярно, но рекомендуем проверять детали у оператора.</p></div></details>
+        <details class="faq-item"><summary>Станции на карте не совпадают с реальностью. Что делать?</summary><div><p>Нажмите «Сообщить об ошибке» на карточке станции или напишите на support@evpoint.kz.</p></div></details>
+        <details class="faq-item"><summary>Можно ли добавить свою станцию?</summary><div><p>Да. Напишите на partners@evpoint.kz — пришлём формат данных или API.</p></div></details>
+        <details class="faq-item"><summary>Работает ли evPoint.kz за пределами Казахстана?</summary><div><p>Фокус — Казахстан. Поддержка других стран может появиться позже.</p></div></details>
+        <details class="faq-item"><summary>Зачем нужен доступ к геолокации?</summary><div><p>Чтобы показывать ближайшие станции и строить маршруты. Локация не передаётся третьим лицам.</p></div></details>
+        <details class="faq-item"><summary>Как часто обновляются данные?</summary><div><p>Справочник и точки обновляются регулярно; онлайн-статусы зависят от открытости данных операторов.</p></div></details>
+        <details class="faq-item"><summary>Куда писать по сотрудничеству и вопросам СМИ?</summary><div><p>Пишите на hello@evpoint.kz.</p></div></details>
+      </section>
 
-    // Функция для замены email/URL на ссылки
-    function linkify(text) {
-      const urlPattern = /(https?:\/\/[^\s]+)/g;
-      const emailPattern = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
-      return text
-        .replace(urlPattern, '<a href="$1" target="_blank">$1</a>')
-        .replace(emailPattern, '<a href="mailto:$1">$1</a>');
-    }
+      <section class="faq-language" data-lang="kk" hidden>
+        <h1>evPoint.kz FAQ</h1>
+        <details class="faq-item"><summary>evPoint.kz деген не?</summary><div><p>evPoint.kz — Қазақстандағы зарядтау станцияларының агрегаторы. Біз әртүрлі операторлардың деректерін жинап, оларды бір картада көрсетеміз.</p></div></details>
+        <details class="faq-item"><summary>Қолданбада қанша станция бар?</summary><div><p>Қазақстан бойынша 1000+ станция. Деректер үнемі жаңартылып отырады.</p></div></details>
+        <details class="faq-item"><summary>evPoint.kz оператор қосымшаларынан несімен ерекшеленеді?</summary><div><p>Біз әртүрлі провайдерлердің станцияларын бір жерден көрсетеміз. Төлем/бронь оператордың қосымшасында жасалады (егер қолжетімді болса).</p></div></details>
+        <details class="faq-item"><summary>Тіркелу қажет пе?</summary><div><p>Жоқ, қосымшаны тіркелмей-ақ пайдалануға болады. Болашақта авторизация қосымша мүмкіндіктер береді.</p></div></details>
+        <details class="faq-item"><summary>Офлайн-режим бар ма?</summary><div><p>Иә. Карта мен станциялар тізімі соңғы деректер жаңартылғаннан кейін офлайн қолжетімді.</p></div></details>
+        <details class="faq-item"><summary>Станцияларды оператор және коннектор түрі бойынша қалай сүзуге болады?</summary><div><p>Фильтрлерді ашып, қажетті операторлар мен қосқыш түрлерін таңдаңыз (CCS2, Type 2, CHAdeMO және т.б.).</p></div></details>
+        <details class="faq-item"><summary>Станцияны брондауға бола ма?</summary><div><p>evPoint.kz арқылы — жоқ. Егер оператор брондауды қолдаса, оны өзінің қосымшасында жасауға болады.</p></div></details>
+        <details class="faq-item"><summary>Неге қосымшада бағалар жоқ?</summary><div><p>Бағаларды станция операторы белгілейді. Қоғамдық деректер болса, біз оларды көрсетеміз.</p></div></details>
+        <details class="faq-item"><summary>Маршрутты зарядтау станцияларымен қалай құруға болады?</summary><div><p>Картадан станцияны таңдап, «Навигация» батырмасын басыңыз — маршрут навигаторда ашылады.</p></div></details>
+        <details class="faq-item"><summary>Apple CarPlay және Android Auto қолдай ма?</summary><div><p>Иә, evPoint.kz CarPlay және Android Auto-ны қолдайды.</p></div></details>
+        <details class="faq-item"><summary>Деректер қайдан алынады және қаншалықты дәл?</summary><div><p>Ашық деректер мен операторлардан. Біз базаны үнемі жаңартып отырамыз, бірақ мәліметтерді оператордан тексеруді ұсынамыз.</p></div></details>
+        <details class="faq-item"><summary>Картадағы станциялар шындыққа сәйкес келмейді. Не істеу керек?</summary><div><p>Станция картасында «Қате туралы хабарлау» батырмасын басыңыз немесе support@evpoint.kz поштасына жазыңыз.</p></div></details>
+        <details class="faq-item"><summary>Өз станциямды қосуға бола ма?</summary><div><p>Иә. partners@evpoint.kz поштасына жазыңыз — деректер форматын немесе API жібереміз.</p></div></details>
+        <details class="faq-item"><summary>evPoint.kz Қазақстаннан тыс жұмыс істей ме?</summary><div><p>Негізгі назар — Қазақстан. Басқа елдерді қосу кейінірек мүмкін.</p></div></details>
+        <details class="faq-item"><summary>Геолокацияға рұқсат не үшін керек?</summary><div><p>Жақын станцияларды көрсету және маршруттар құру үшін. Орналасу деректері үшінші тұлғаларға берілмейді.</p></div></details>
+        <details class="faq-item"><summary>Деректер қаншалықты жиі жаңартылады?</summary><div><p>Станциялар мен анықтамалық үнемі жаңартылады; онлайн-статустар оператордың деректеріне байланысты.</p></div></details>
+        <details class="faq-item"><summary>Серіктестік және БАҚ сұрақтары бойынша қайда жазуға болады?</summary><div><p>hello@evpoint.kz поштасына жазыңыз.</p></div></details>
+      </section>
 
-    loadFAQ(getLangFromQuery());
+      <section class="faq-language" data-lang="en" hidden>
+        <h1>evPoint.kz FAQ</h1>
+        <details class="faq-item"><summary>What is evPoint.kz?</summary><div><p>evPoint.kz is an aggregator of charging stations in Kazakhstan. We collect data from different operators and display them on one map.</p></div></details>
+        <details class="faq-item"><summary>How many stations are in the app?</summary><div><p>More than 1000+ stations across Kazakhstan. The list is updated regularly.</p></div></details>
+        <details class="faq-item"><summary>How is evPoint.kz different from operator apps?</summary><div><p>We show stations from various providers in one place. Payments/bookings are made in the operator’s app (if available).</p></div></details>
+        <details class="faq-item"><summary>Do I need to register?</summary><div><p>No, you can use the app without an account. In the future, login may provide extra features.</p></div></details>
+        <details class="faq-item"><summary>Is there an offline mode?</summary><div><p>Yes. The map and station list are available offline from the last data update.</p></div></details>
+        <details class="faq-item"><summary>How to filter stations by provider and connector?</summary><div><p>Open filters and select the needed operators and connector types (CCS2, Type 2, CHAdeMO, etc.).</p></div></details>
+        <details class="faq-item"><summary>Can I book a station?</summary><div><p>Not through evPoint.kz. If the operator supports booking, do it in their app.</p></div></details>
+        <details class="faq-item"><summary>Why are there no prices in the app?</summary><div><p>Prices are set by the station operator. We display them if they are publicly available.</p></div></details>
+        <details class="faq-item"><summary>How do I plan a route with charging stations?</summary><div><p>Select a station and press “Navigation” — the route will open in your navigator.</p></div></details>
+        <details class="faq-item"><summary>Does it support Apple CarPlay and Android Auto?</summary><div><p>Yes, evPoint.kz supports CarPlay and Android Auto.</p></div></details>
+        <details class="faq-item"><summary>Where does the data come from and how accurate is it?</summary><div><p>From open sources and operators. We update regularly but recommend checking details with the operator.</p></div></details>
+        <details class="faq-item"><summary>The stations on the map don't match reality. What to do?</summary><div><p>Press “Report an error” on the station card or email support@evpoint.kz.</p></div></details>
+        <details class="faq-item"><summary>Can I add my own station?</summary><div><p>Yes. Email partners@evpoint.kz — we will send the data format or API.</p></div></details>
+        <details class="faq-item"><summary>Does evPoint.kz work outside Kazakhstan?</summary><div><p>The focus is Kazakhstan. Other countries may be added later.</p></div></details>
+        <details class="faq-item"><summary>Why does the app need location access?</summary><div><p>To show nearby stations and build routes. Location data is not shared with third parties.</p></div></details>
+        <details class="faq-item"><summary>How often is the data updated?</summary><div><p>Stations and directory are updated regularly; online statuses depend on operator data availability.</p></div></details>
+        <details class="faq-item"><summary>Where to write for partnerships and media inquiries?</summary><div><p>Email hello@evpoint.kz.</p></div></details>
+      </section>
+
+      <footer>
+        <p>Для поиска зарядных станций используйте <a href="/stations/">каталог станций</a>, а подробные материалы о приложении и инфраструктуре доступны в <a href="/blog/">блоге evPoint.kz</a>.</p>
+      </footer>
+    </div>
+  </main>
+  <script>
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var sections = document.querySelectorAll(".faq-language");
+      var requestedLang = params.get("lang") || "ru";
+      var availableLangs = Array.from(sections).map(function (section) {
+        return section.getAttribute("data-lang");
+      });
+      var lang = availableLangs.indexOf(requestedLang) !== -1 ? requestedLang : "ru";
+      sections.forEach(function (section) {
+        section.hidden = section.getAttribute("data-lang") !== lang;
+      });
+      document.documentElement.lang = lang;
+    }());
   </script>
 </body>
-
 </html>
