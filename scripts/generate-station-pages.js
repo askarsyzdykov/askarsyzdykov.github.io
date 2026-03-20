@@ -9,6 +9,7 @@ const OUTPUT_ROOT = path.resolve(ROOT_DIR, process.argv[3] || ".pages-build");
 const STATIONS_DIR = path.join(OUTPUT_ROOT, "stations");
 const SITEMAP_PATH = path.join(OUTPUT_ROOT, "stations-sitemap.xml");
 const SITE_URL = "https://evpoint.kz";
+const STATIONS_STYLESHEET_PATH = "/assets/stations.css";
 
 function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
@@ -21,6 +22,10 @@ function ensureDir(dirPath) {
 function writeFile(filePath, content) {
   ensureDir(path.dirname(filePath));
   fs.writeFileSync(filePath, content);
+}
+
+function fileLastModifiedIso(filePath) {
+  return fs.statSync(filePath).mtime.toISOString();
 }
 
 function escapeHtml(value) {
@@ -67,6 +72,22 @@ function toNumber(value) {
 
 function dedupe(values) {
   return [...new Set(values.filter(Boolean))];
+}
+
+function uniqueBy(values, getKey) {
+  const seen = new Set();
+  const result = [];
+
+  for (const value of values) {
+    const key = getKey(value);
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    result.push(value);
+  }
+
+  return result;
 }
 
 function firstNonEmpty(...values) {
@@ -283,11 +304,66 @@ function normalizeStations(place, providerMap) {
   });
 }
 
-function inferUpdatedAt(place) {
-  return new Date().toISOString();
+function normalizeIsoDate(value) {
+  const text = normalizeWhitespace(value);
+  if (!text) {
+    return "";
+  }
+
+  const timestamp = Date.parse(text);
+  if (!Number.isFinite(timestamp)) {
+    return "";
+  }
+
+  return new Date(timestamp).toISOString();
 }
 
-function normalizePlace(place, providerMap) {
+function inferUpdatedAt(place, datasetUpdatedAt) {
+  return normalizeIsoDate(place.updated_at)
+    || normalizeIsoDate(place.created_at)
+    || datasetUpdatedAt;
+}
+
+function maxUpdatedAt(values, fallbackValue) {
+  const normalized = values
+    .map((value) => normalizeIsoDate(value))
+    .filter(Boolean)
+    .sort();
+
+  return normalized[normalized.length - 1] || fallbackValue;
+}
+
+function formatLastUpdated(updatedAt) {
+  return new Date(updatedAt).toLocaleString("ru-KZ");
+}
+
+function buildBreadcrumbList(items) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.name,
+      item: item.url
+    }))
+  };
+}
+
+function buildItemList(items) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      url: item.url,
+      name: item.name
+    }))
+  };
+}
+
+function normalizePlace(place, providerMap, datasetUpdatedAt) {
   const locality = detectLocality(place);
   const localitySlug = slugify(locality) || "kazakhstan";
   const title = safeText(place.title, "Зарядная станция");
@@ -321,7 +397,7 @@ function normalizePlace(place, providerMap) {
     outletCount: (place.stations || []).reduce((sum, station) => sum + (station.outlets || []).length, 0),
     maxPower,
     amenities: dedupe((place.amenities || []).map((item) => normalizeWhitespace(item))),
-    updatedAt: inferUpdatedAt(place),
+    updatedAt: inferUpdatedAt(place, datasetUpdatedAt),
     place
   };
 }
@@ -338,6 +414,7 @@ function stationDeepLink(stationId) {
 }
 
 function pageShell({ title, description, canonicalUrl, body, jsonLd }) {
+  const jsonLdPayload = Array.isArray(jsonLd) ? jsonLd : [jsonLd];
   return `<!doctype html>
 <html lang="ru">
 <head>
@@ -346,136 +423,14 @@ function pageShell({ title, description, canonicalUrl, body, jsonLd }) {
   <title>${escapeHtml(title)}</title>
   <meta name="description" content="${escapeHtml(description)}">
   <link rel="canonical" href="${escapeHtml(canonicalUrl)}">
+  <link rel="stylesheet" href="${STATIONS_STYLESHEET_PATH}">
   <meta property="og:type" content="website">
   <meta property="og:title" content="${escapeHtml(title)}">
   <meta property="og:description" content="${escapeHtml(description)}">
   <meta property="og:url" content="${escapeHtml(canonicalUrl)}">
   <meta property="og:site_name" content="evPoint.kz">
   <meta name="robots" content="index,follow">
-  <style>
-    :root {
-      color-scheme: light;
-      --bg: #f5f2e9;
-      --surface: #fffdfa;
-      --text: #1e1f1b;
-      --muted: #5f6458;
-      --line: #d9d1c3;
-      --accent: #0f766e;
-      --accent-soft: #dff5f1;
-      --shadow: 0 14px 40px rgba(32, 38, 24, 0.08);
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: Georgia, "Times New Roman", serif;
-      color: var(--text);
-      background:
-        radial-gradient(circle at top right, rgba(15, 118, 110, 0.10), transparent 28%),
-        linear-gradient(180deg, #faf7ef 0%, var(--bg) 100%);
-    }
-    a { color: var(--accent); }
-    .wrap {
-      width: min(1040px, calc(100% - 32px));
-      margin: 0 auto;
-      padding: 32px 0 64px;
-    }
-    .topbar {
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-      margin-bottom: 28px;
-      color: var(--muted);
-      font-size: 14px;
-    }
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--line);
-      border-radius: 20px;
-      box-shadow: var(--shadow);
-      padding: 28px;
-    }
-    h1, h2 {
-      margin: 0 0 16px;
-      line-height: 1.1;
-    }
-    h1 { font-size: clamp(32px, 5vw, 54px); }
-    h2 { font-size: clamp(22px, 3vw, 30px); margin-top: 32px; }
-    p { margin: 0 0 14px; line-height: 1.65; }
-    .lead { font-size: 18px; color: var(--muted); }
-    .meta {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 14px;
-      margin: 26px 0 10px;
-    }
-    .meta-item, .list-item {
-      padding: 16px;
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      background: #fff;
-    }
-    .meta-label {
-      display: block;
-      margin-bottom: 8px;
-      font-size: 12px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--muted);
-    }
-    .chips {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin: 10px 0 0;
-    }
-    .chip {
-      display: inline-block;
-      padding: 7px 12px;
-      border-radius: 999px;
-      background: var(--accent-soft);
-      color: #0b4f4a;
-      font-size: 14px;
-      text-decoration: none;
-    }
-    .actions {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-top: 24px;
-    }
-    .button {
-      display: inline-block;
-      padding: 12px 16px;
-      border-radius: 12px;
-      text-decoration: none;
-      border: 1px solid var(--accent);
-    }
-    .button.primary {
-      background: var(--accent);
-      color: #fff;
-    }
-    ul {
-      margin: 16px 0 0;
-      padding-left: 20px;
-      line-height: 1.65;
-    }
-    .list {
-      display: grid;
-      gap: 14px;
-      margin-top: 20px;
-    }
-    .list-item h3 {
-      margin: 0 0 8px;
-      font-size: 22px;
-    }
-    .list-item p { color: var(--muted); }
-    footer {
-      margin-top: 28px;
-      color: var(--muted);
-      font-size: 14px;
-    }
-  </style>
-  <script type="application/ld+json">${JSON.stringify(jsonLd)}</script>
+  <script type="application/ld+json">${JSON.stringify(jsonLdPayload)}</script>
 </head>
 <body>
   ${body}
@@ -486,11 +441,19 @@ function pageShell({ title, description, canonicalUrl, body, jsonLd }) {
 function renderStationPage(place, siblingPlaces) {
   const title = `${place.title} в ${place.locality} | evPoint.kz`;
   const description = `Зарядная станция ${place.title} в ${place.locality}: адрес, коннекторы, мощность и операторы на evPoint.kz.`;
-  const jsonLd = {
+  const breadcrumbJsonLd = buildBreadcrumbList([
+    { name: "Главная", url: `${SITE_URL}/` },
+    { name: "Станции", url: `${SITE_URL}/stations/` },
+    { name: place.locality, url: `${SITE_URL}/stations/${place.localitySlug}/` },
+    { name: place.title, url: place.absoluteUrl }
+  ]);
+  const stationJsonLd = {
     "@context": "https://schema.org",
     "@type": "ElectricVehicleChargingStation",
     name: place.title,
     url: place.absoluteUrl,
+    dateCreated: place.updatedAt,
+    dateModified: place.updatedAt,
     address: {
       "@type": "PostalAddress",
       addressCountry: "KZ",
@@ -512,6 +475,7 @@ function renderStationPage(place, siblingPlaces) {
       name
     }))
   };
+  const jsonLd = [breadcrumbJsonLd, stationJsonLd];
 
   const related = siblingPlaces
     .filter((item) => item.id !== place.id)
@@ -583,7 +547,7 @@ function renderStationPage(place, siblingPlaces) {
       <h2>Другие станции рядом по локации</h2>
       <div class="list">${related}</div>` : ""}
     </article>
-    <footer>Последнее обновление страницы: ${escapeHtml(new Date(place.updatedAt).toLocaleString("ru-KZ"))}</footer>
+    <footer>Последнее обновление страницы: ${escapeHtml(formatLastUpdated(place.updatedAt))}</footer>
   </main>`;
 
   return pageShell({
@@ -598,12 +562,26 @@ function renderStationPage(place, siblingPlaces) {
 function renderLocalityPage(locality, places) {
   const title = `Зарядные станции в ${locality.name} | evPoint.kz`;
   const description = `Каталог зарядных станций в ${locality.name}: адреса, коннекторы и операторы на evPoint.kz.`;
-  const jsonLd = {
+  const localityUrl = `${SITE_URL}/stations/${locality.slug}/`;
+  const localityUpdatedAt = maxUpdatedAt(places.map((place) => place.updatedAt), locality.updatedAt);
+  const jsonLd = [
+    buildBreadcrumbList([
+      { name: "Главная", url: `${SITE_URL}/` },
+      { name: "Станции", url: `${SITE_URL}/stations/` },
+      { name: locality.name, url: localityUrl }
+    ]),
+    {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     name: title,
-    url: `${SITE_URL}/stations/${locality.slug}/`
-  };
+    url: localityUrl,
+    dateModified: localityUpdatedAt
+    },
+    buildItemList(places.map((place) => ({
+      url: place.absoluteUrl,
+      name: place.title
+    })))
+  ];
   const items = places
     .map((place) => `
       <div class="list-item">
@@ -632,7 +610,7 @@ function renderLocalityPage(locality, places) {
   return pageShell({
     title,
     description,
-    canonicalUrl: `${SITE_URL}/stations/${locality.slug}/`,
+    canonicalUrl: localityUrl,
     body,
     jsonLd
   });
@@ -641,12 +619,25 @@ function renderLocalityPage(locality, places) {
 function renderIndexPage(localities, places) {
   const title = "Зарядные станции Казахстана | evPoint.kz";
   const description = "Каталог зарядных станций evPoint.kz по городам и регионам Казахстана.";
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "CollectionPage",
-    name: title,
-    url: `${SITE_URL}/stations/`
-  };
+  const indexUrl = `${SITE_URL}/stations/`;
+  const indexUpdatedAt = maxUpdatedAt(places.map((place) => place.updatedAt), fileLastModifiedIso(INPUT_PATH));
+  const jsonLd = [
+    buildBreadcrumbList([
+      { name: "Главная", url: `${SITE_URL}/` },
+      { name: "Станции", url: indexUrl }
+    ]),
+    {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      name: title,
+      url: indexUrl,
+      dateModified: indexUpdatedAt
+    },
+    buildItemList(uniqueBy(places, (place) => place.absoluteUrl).slice(0, 50).map((place) => ({
+      url: place.absoluteUrl,
+      name: place.title
+    })))
+  ];
   const localityCards = localities
     .map((locality) => `
       <div class="list-item">
@@ -689,7 +680,7 @@ function renderIndexPage(localities, places) {
   return pageShell({
     title,
     description,
-    canonicalUrl: `${SITE_URL}/stations/`,
+    canonicalUrl: indexUrl,
     body,
     jsonLd
   });
@@ -712,8 +703,9 @@ ${entries}
 
 function main() {
   const data = readJson(INPUT_PATH);
+  const datasetUpdatedAt = fileLastModifiedIso(INPUT_PATH);
   const providerMap = buildProviderMap(data.result?.providers || []);
-  const places = (data.result?.places || []).map((place) => normalizePlace(place, providerMap));
+  const places = (data.result?.places || []).map((place) => normalizePlace(place, providerMap, datasetUpdatedAt));
   const sortedPlaces = places.sort((a, b) => {
     const localityCompare = a.locality.localeCompare(b.locality, "ru");
     return localityCompare || a.title.localeCompare(b.title, "ru");
@@ -728,10 +720,15 @@ function main() {
       localitiesMap.set(key, {
         slug: place.localitySlug,
         name: place.locality,
+        updatedAt: place.updatedAt,
         places: []
       });
     }
     localitiesMap.get(key).places.push(place);
+    localitiesMap.get(key).updatedAt = maxUpdatedAt(
+      [localitiesMap.get(key).updatedAt, place.updatedAt],
+      datasetUpdatedAt
+    );
   }
 
   const sitemapEntries = [];
@@ -744,7 +741,7 @@ function main() {
   ));
   sitemapEntries.push({
     url: `${SITE_URL}/stations/`,
-    updatedAt: new Date().toISOString()
+    updatedAt: maxUpdatedAt(sortedPlaces.map((place) => place.updatedAt), datasetUpdatedAt)
   });
 
   for (const locality of localitiesMap.values()) {
@@ -754,7 +751,7 @@ function main() {
     );
     sitemapEntries.push({
       url: `${SITE_URL}/stations/${locality.slug}/`,
-      updatedAt: new Date().toISOString()
+      updatedAt: locality.updatedAt
     });
 
     for (const place of locality.places) {

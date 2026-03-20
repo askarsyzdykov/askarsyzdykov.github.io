@@ -24,6 +24,7 @@ rsync -a \
   --exclude 'vendor/' \
   --exclude 'blog-src/' \
   --exclude 'scripts/' \
+  --exclude 'sitemap.xml' \
   --exclude 'AGENTS.md' \
   --exclude '.gitignore' \
   "$ROOT_DIR/" "$BUILD_DIR/"
@@ -34,5 +35,6 @@ rsync -a \
 )
 
 node "$ROOT_DIR/scripts/generate-station-pages.js" "data/stations.json" "$BUILD_DIR"
+node "$ROOT_DIR/scripts/generate-root-sitemap.js" "$BUILD_DIR"
 
 touch "$BUILD_DIR/.nojekyll"
