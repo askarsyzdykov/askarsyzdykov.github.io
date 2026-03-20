@@ -555,7 +555,7 @@ function renderStationPage(place, siblingPlaces) {
       <p class="lead">Страница станции evPoint.kz для поиска в Google и перехода в приложение.</p>
       <div class="meta">
         <div class="meta-item">
-          <span class="meta-label">Локация</span>
+          <span class="meta-label">Область/город</span>
           ${escapeHtml(place.locality)}
         </div>
         <div class="meta-item">
