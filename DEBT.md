@@ -71,20 +71,21 @@
 
 ## P1
 
-### 5. Исправить качество и достоверность `lastmod` для станций и sitemap
+### 5. Начать использовать `created_at` для реального `lastmod` у станций и листингов
 
 Проблема:
-- В генераторе станций `inferUpdatedAt()` всегда возвращает `new Date().toISOString()`: [scripts/generate-station-pages.js](/Users/askarsyzdykov/Projects/my/ev-charging-stations/blog/askarsyzdykov.github.io/scripts/generate-station-pages.js).
-- Из-за этого все station pages и sitemap выглядят как обновлённые на каждый билд.
+- В `data/stations.json` у places теперь есть `created_at`, но генератор станций его не использует: `inferUpdatedAt()` всё ещё возвращает `new Date().toISOString()`: [scripts/generate-station-pages.js](/Users/askarsyzdykov/Projects/my/ev-charging-stations/blog/askarsyzdykov.github.io/scripts/generate-station-pages.js).
+- Из-за этого station pages, `/stations/`, городские листинги и `stations-sitemap.xml` всё ещё выглядят как обновлённые на каждый билд, даже если данные не менялись.
 
 Почему важно:
 - Это слабый сигнал для поисковых систем и может подрывать доверие к `lastmod`.
 - Поисковый робот получает шум вместо реальной свежести контента.
 
 Что сделать:
-- Брать `updatedAt` из исходных данных станции, если поле существует.
-- Если его нет, использовать дату обновления датасета, а не текущее время.
-- Для root sitemap тоже перейти на автоматическую генерацию реальных `lastmod`.
+- Для station pages и station URL в sitemap использовать `place.created_at` как базовую дату свежести.
+- Если позже появится отдельное поле обновления, поддержать приоритет `updated_at || created_at`.
+- Для `/stations/` и `/stations/{city}/` считать `lastmod` как максимум по `created_at` вложенных станций, а не как время билда.
+- На странице станции выводить “Последнее обновление” из данных, а не из текущего времени сборки.
 
 ### 6. Снизить риск thin / duplicate content в каталоге станций
 
@@ -123,6 +124,7 @@
 - Сейчас есть только базовый JSON-LD для station page и простая `CollectionPage` для листингов: [scripts/generate-station-pages.js](/Users/askarsyzdykov/Projects/my/ev-charging-stations/blog/askarsyzdykov.github.io/scripts/generate-station-pages.js).
 - Нет breadcrumb schema.
 - Нет ItemList для городских страниц.
+- Дата из `created_at` не пробрасывается в page-level metadata и structured data.
 
 Почему важно:
 - Поисковики хуже понимают иерархию `/stations/ -> /stations/{city}/ -> /stations/{station}/`.
@@ -132,12 +134,13 @@
 - Добавить `BreadcrumbList` на station и locality pages.
 - Для страниц городов добавить `ItemList` с URL станций.
 - Расширить `ElectricVehicleChargingStation`, если в данных есть цена, оператор, geo, opening hours, payment options.
+- Если это уместно для используемых schema-типов, добавить `dateModified`/`dateCreated` на основе `created_at`.
 
 ### 9. Автоматизировать root sitemap вместо ручного файла
 
 Проблема:
 - Корневой [sitemap.xml](/Users/askarsyzdykov/Projects/my/ev-charging-stations/blog/askarsyzdykov.github.io/sitemap.xml) поддерживается вручную.
-- Даты и список URL могут устаревать.
+- Даты и список URL могут устаревать, даже если `stations-sitemap.xml` уже генерируется отдельно.
 
 Почему важно:
 - Ручной sitemap часто расходится с реальным состоянием сайта.
@@ -146,6 +149,7 @@
 Что сделать:
 - Генерировать root sitemap в `build-pages.sh` или отдельным script.
 - Включать туда root pages, `faq/`, `app/`, `blog/`, а station sitemap оставлять отдельным индексом или частью общей схемы.
+- Для статических URL брать даты из файлов, а для каталога станций использовать уже посчитанные `lastmod`, основанные на `created_at`.
 - Исключить ручное редактирование sitemap из повседневного процесса.
 
 ## P2
