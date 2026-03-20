@@ -11,8 +11,7 @@ plugins:
   - jekyll-sitemap
   - jekyll-seo-tag
 
-author:
-  name: Askar Syzdykov
+author: "Askar Syzdykov"
 email: info@evpoint.kz
 
 # 🗺️ Локализация (для поиска)
