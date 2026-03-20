@@ -22,13 +22,14 @@
       </label>
 
       <div class="trigger">
+        <a class="page-link" href="{{ site.url }}/stations/">Станции</a>
+        <a class="page-link" href="{{ site.url }}/faq/">FAQ</a>
         {% for page in site.pages %}
           {% if page.nav == true %}
             <a class="page-link" href="{{ page.url | relative_url }}">{{ page.title | escape }}</a>
           {% endif %}
         {% endfor %}
 
-        <!-- 🔗 Ссылка на основной сайт -->
         <a class="page-link" href="{{ site.url }}/">evPoint.kz</a>
       </div>
     </nav>

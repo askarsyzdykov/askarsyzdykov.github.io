@@ -413,6 +413,34 @@ function stationDeepLink(stationId) {
   return `https://evpoint.kz/stations?id=${encodeURIComponent(stationId)}`;
 }
 
+function renderResourceLinks(placeOrLocality) {
+  const localityName = escapeHtml(placeOrLocality.locality || placeOrLocality.name || "Казахстан");
+  const localitySlug = escapeHtml(placeOrLocality.localitySlug || placeOrLocality.slug || "");
+
+  return `
+    <section class="card">
+      <h2>Полезные ссылки</h2>
+      <div class="list">
+        <div class="list-item">
+          <h3><a href="/faq/">FAQ по зарядке и электромобилям</a></h3>
+          <p>Ответы на частые вопросы о зарядке, приложении и поездках на электромобиле.</p>
+        </div>
+        <div class="list-item">
+          <h3><a href="/blog/route-planning/">Как строить маршрут в evPoint.kz</a></h3>
+          <p>Практический материал по поездкам между городами и поиску станций по пути.</p>
+        </div>
+        <div class="list-item">
+          <h3><a href="/blog/providers/">Провайдеры зарядных станций</a></h3>
+          <p>Список операторов и сетей, доступных в базе evPoint.kz.</p>
+        </div>
+        <div class="list-item">
+          <h3><a href="/stations/${localitySlug}/">Все станции в ${localityName}</a></h3>
+          <p>Быстрый переход к каталогу зарядных станций по этой локации.</p>
+        </div>
+      </div>
+    </section>`;
+}
+
 function pageShell({ title, description, canonicalUrl, body, jsonLd }) {
   const jsonLdPayload = Array.isArray(jsonLd) ? jsonLd : [jsonLd];
   return `<!doctype html>
@@ -513,6 +541,8 @@ function renderStationPage(place, siblingPlaces) {
       <a href="/">Главная</a>
       <a href="/stations/">Все станции</a>
       <a href="/stations/${escapeHtml(place.localitySlug)}/">${escapeHtml(place.locality)}</a>
+      <a href="/faq/">FAQ</a>
+      <a href="/blog/">Блог</a>
     </div>
     <article class="card">
       <h1>${escapeHtml(place.title)}</h1>
@@ -547,6 +577,7 @@ function renderStationPage(place, siblingPlaces) {
       <h2>Другие станции рядом по локации</h2>
       <div class="list">${related}</div>` : ""}
     </article>
+    ${renderResourceLinks(place)}
     <footer>Последнее обновление страницы: ${escapeHtml(formatLastUpdated(place.updatedAt))}</footer>
   </main>`;
 
@@ -599,12 +630,15 @@ function renderLocalityPage(locality, places) {
     <div class="topbar">
       <a href="/">Главная</a>
       <a href="/stations/">Все станции</a>
+      <a href="/faq/">FAQ</a>
+      <a href="/blog/">Блог</a>
     </div>
     <section class="card">
       <h1>${escapeHtml(locality.name)}</h1>
       <p class="lead">Найдено ${places.length} станций в этой локации.</p>
       <div class="list">${items}</div>
     </section>
+    ${renderResourceLinks(locality)}
   </main>`;
 
   return pageShell({
@@ -674,6 +708,23 @@ function renderIndexPage(localities, places) {
       <div class="list">${localityCards}</div>
       <h2>Примеры станций</h2>
       <div class="list">${recentCards}</div>
+    </section>
+    <section class="card">
+      <h2>Полезные материалы</h2>
+      <div class="list">
+        <div class="list-item">
+          <h3><a href="/faq/">FAQ по электромобилям и зарядке</a></h3>
+          <p>Частые вопросы о зарядных станциях, приложении и использовании сервиса.</p>
+        </div>
+        <div class="list-item">
+          <h3><a href="/blog/route-planning/">Маршруты с зарядками по Казахстану</a></h3>
+          <p>Гид по построению маршрута и поиску зарядных точек по дороге.</p>
+        </div>
+        <div class="list-item">
+          <h3><a href="/blog/providers/">Сети и провайдеры зарядных станций</a></h3>
+          <p>Материал о провайдерах, доступных в базе evPoint.kz.</p>
+        </div>
+      </div>
     </section>
   </main>`;
 
