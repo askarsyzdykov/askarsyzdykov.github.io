@@ -1,0 +1,915 @@
+<!doctype html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Запросить цену адаптера | evPoint.kz</title>
+  <meta name="description" content="evPoint.kz зарегистрирует вашу заявку на EV-адаптер и передаст ее поставщику.">
+  <link rel="canonical" href="https://evpoint.kz/adapters/request/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Запросить цену адаптера">
+  <meta property="og:description" content="evPoint.kz зарегистрирует вашу заявку и передаст ее поставщику.">
+  <meta property="og:url" content="https://evpoint.kz/adapters/request/">
+  <meta property="og:image" content="https://evpoint.kz/assets/images/preview3.png">
+  <meta property="og:site_name" content="evPoint.kz">
+  <meta name="theme-color" content="#0e5e50">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <main class="page">
+    <nav class="topbar" aria-label="Site navigation">
+      <a class="brand" href="/">evPoint.kz</a>
+      <div class="topbar-actions">
+        <div class="lang-switch" aria-label="Language">
+          <button class="lang-button" type="button" data-lang="kk">ҚАЗ</button>
+          <button class="lang-button" type="button" data-lang="ru">РУС</button>
+          <button class="lang-button" type="button" data-lang="en">ENG</button>
+        </div>
+      </div>
+    </nav>
+
+    <section class="shell" aria-labelledby="page-title">
+      <header class="intro">
+        <h1 id="page-title" data-i18n="pageTitle">Запросить цену адаптера</h1>
+        <p class="subtitle" data-i18n="subtitle">Оставьте заявку через evPoint.kz и получите персональный промокод на скидку у поставщика.</p>
+      </header>
+
+      <form class="form-panel" id="adapter-form" novalidate>
+        <div class="form-grid">
+          <div class="field">
+            <label for="name" data-i18n="nameLabel">Имя</label>
+            <input id="name" name="name" autocomplete="name" required>
+            <div class="error-text" id="name-error" aria-live="polite"></div>
+          </div>
+
+          <div class="field">
+            <label for="phone" data-i18n="phoneLabel">WhatsApp номер</label>
+            <input id="phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" maxlength="18" placeholder="+7 (___) ___-__-__" aria-describedby="phone-help phone-error" required>
+            <div class="field-help" id="phone-help" data-i18n="phoneHelp">Укажите WhatsApp номер: поставщик свяжется с вами там.</div>
+            <div class="error-text" id="phone-error" aria-live="polite"></div>
+          </div>
+
+          <div class="field">
+            <label for="city" data-i18n="cityLabel">Город</label>
+            <input id="city" name="city" autocomplete="address-level2">
+            <div class="error-text" id="city-error" aria-live="polite"></div>
+          </div>
+
+          <div class="field">
+            <label for="carModel" data-i18n="carModelLabel">Модель авто</label>
+            <input id="carModel" name="carModel" autocomplete="off">
+            <div class="error-text" id="carModel-error" aria-live="polite"></div>
+          </div>
+
+          <div class="field">
+            <label for="adapterType" data-i18n="adapterTypeLabel">Тип адаптера</label>
+            <select id="adapterType" name="adapterType" required>
+              <option value="GBT_DC_TO_CCS1">GBT DC -> CCS 1</option>
+              <option value="GBT_DC_TO_CCS2">GBT DC -> CCS 2</option>
+              <option value="CCS2_TO_GBT_DC">CCS 2 -> GBT DC</option>
+            </select>
+            <div class="adapter-hint" id="adapter-hint"></div>
+            <div class="error-text" id="adapterType-error" aria-live="polite"></div>
+          </div>
+
+          <div class="field">
+            <label for="comment" data-i18n="commentLabel">Комментарий</label>
+            <textarea id="comment" name="comment" autocomplete="off"></textarea>
+            <div class="error-text" id="comment-error" aria-live="polite"></div>
+          </div>
+
+          <label class="consent-row" for="consent">
+            <input id="consent" name="consent" type="checkbox" required>
+            <span class="consent-copy" data-i18n="consentText">Я согласен/согласна, что evPoint.kz может передать мои контактные данные поставщику для обработки заявки на адаптер.</span>
+          </label>
+          <div class="error-text" id="consent-error" aria-live="polite"></div>
+
+          <div class="form-error" id="form-error" role="alert"></div>
+
+          <button class="submit-button" id="submit-button" type="submit">
+            <span class="button-spinner" aria-hidden="true"></span>
+            <span class="button-label" id="submit-button-label" data-i18n="submit">Запросить цену адаптера</span>
+          </button>
+        </div>
+      </form>
+
+      <section class="success-panel" id="success-panel" aria-live="polite" hidden>
+        <h2 class="success-title" data-i18n="successTitle">Ваша заявка зарегистрирована.</h2>
+        <p class="success-copy" data-i18n="successCopy">Сообщите этот промокод поставщику перед покупкой, чтобы он применил скидку.</p>
+
+        <div class="lead-block">
+          <div class="lead-meta">
+            <div class="lead-label" data-i18n="leadLabel">Промокод для скидки</div>
+            <div class="lead-id" id="lead-id"></div>
+          </div>
+          <button class="copy-button" id="copy-lead-id" type="button" data-i18n="copy">Копировать</button>
+        </div>
+        <p class="lead-helper" data-i18n="leadHelper">Промокод действует как идентификатор вашей заявки и нужен для получения скидки.</p>
+
+        <p class="product-row"><strong data-i18n="productRowLabel">Товар:</strong> <span id="success-product-title"></span></p>
+
+        <a class="whatsapp-button" id="whatsapp-button" href="#" rel="noopener" hidden data-i18n="whatsappButton">Связаться с поставщиком в WhatsApp</a>
+        <div class="fallback-message" id="whatsapp-fallback" hidden></div>
+
+        <p class="seller-note" data-i18n="sellerNote">evPoint.kz не является продавцом товара. Цена, оплата, доставка, гарантия и возврат обрабатываются поставщиком.</p>
+      </section>
+    </section>
+  </main>
+
+  <script src="i18n.js"></script>
+  <script>
+    (function () {
+      var DEFAULT_PRODUCT_TYPE = "GBT_DC_TO_CCS1";
+      var DEFAULT_PRODUCT_TITLE = "GBT DC -> CCS 1";
+      var ADAPTER_LEADS_API_URL = "https://api.evpoint.kz/api/adapter-leads";
+      var allowedPlatforms = ["GOOGLE", "APPLE", "WEB"];
+      var fieldVisibilityTimers = [];
+      var shouldIgnoreNextTypedCountryCode = false;
+      var params = new URLSearchParams(window.location.search);
+      var adapterOptions = [
+        {
+          productType: "GBT_DC_TO_CCS1",
+          productTitle: "GBT DC -> CCS 1",
+          aliases: ["GBT/DC to CCS1 adapter", "GBT DC to CCS 1", "GBT DC -> CCS1"]
+        },
+        {
+          productType: "GBT_DC_TO_CCS2",
+          productTitle: "GBT DC -> CCS 2",
+          aliases: ["GBT DC to CCS 2", "GBT DC -> CCS2"]
+        },
+        {
+          productType: "CCS2_TO_GBT_DC",
+          productTitle: "CCS 2 -> GBT DC",
+          aliases: ["CCS2 to GBT DC", "CCS 2 to GBT DC"]
+        }
+      ];
+      var messages = window.ADAPTER_REQUEST_MESSAGES || {};
+      var state = {
+        lang: normalizeLanguage(getParam("lang") || getParam("locale")),
+        productType: normalizeProductType(getParam("productType"), getParam("productTitle")),
+        supplierId: getParam("supplierId"),
+        source: {
+          platform: normalizePlatform(getParam("platform")),
+          appUserId: getParam("appUserId"),
+          stationId: getParam("stationId"),
+          appVersion: getParam("appVersion"),
+          utmSource: getParam("utmSource"),
+          utmCampaign: getParam("utmCampaign")
+        },
+        lead: null,
+        isSubmitting: false
+      };
+
+      var form = document.getElementById("adapter-form");
+      var submitButton = document.getElementById("submit-button");
+      var submitButtonLabel = document.getElementById("submit-button-label");
+      var formError = document.getElementById("form-error");
+      var successPanel = document.getElementById("success-panel");
+      var leadIdEl = document.getElementById("lead-id");
+      var productTitleEl = document.getElementById("success-product-title");
+      var copyLeadButton = document.getElementById("copy-lead-id");
+      var whatsappButton = document.getElementById("whatsapp-button");
+      var whatsappFallback = document.getElementById("whatsapp-fallback");
+      var langButtons = document.querySelectorAll("[data-lang]");
+      var adapterHint = document.getElementById("adapter-hint");
+      var fields = {
+        name: document.getElementById("name"),
+        phone: document.getElementById("phone"),
+        city: document.getElementById("city"),
+        carModel: document.getElementById("carModel"),
+        adapterType: document.getElementById("adapterType"),
+        comment: document.getElementById("comment"),
+        consent: document.getElementById("consent")
+      };
+
+      fields.city.value = getParam("city") || "";
+      fields.carModel.value = getParam("carModel") || "";
+      fields.adapterType.value = state.productType;
+      applyLanguage(state.lang, false);
+
+      form.addEventListener("submit", handleSubmit);
+      copyLeadButton.addEventListener("click", copyLeadId);
+      whatsappButton.addEventListener("click", handleWhatsappClick);
+      fields.phone.addEventListener("beforeinput", handlePhoneBeforeInput);
+      langButtons.forEach(function (button) {
+        button.addEventListener("click", function () {
+          applyLanguage(button.getAttribute("data-lang"), true);
+          clearErrors();
+        });
+      });
+
+      Object.keys(fields).forEach(function (key) {
+        var field = fields[key];
+        field.addEventListener((key === "consent" || key === "adapterType") ? "change" : "input", function () {
+          if (key === "adapterType") {
+            updateAdapterSelection(true);
+          }
+          if (key === "phone") {
+            formatPhoneField();
+          }
+          clearFieldError(key);
+          hideFormError();
+        });
+
+        field.addEventListener("focus", function () {
+          scheduleFieldVisibilityCheck(field);
+        });
+      });
+
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener("resize", handleVisualViewportChange);
+        window.visualViewport.addEventListener("scroll", handleVisualViewportChange);
+        updateKeyboardInset();
+      }
+
+      function getParam(name) {
+        var value = params.get(name);
+        return value && value.trim() ? value.trim() : "";
+      }
+
+      function normalizePlatform(value) {
+        if (!value) {
+          return undefined;
+        }
+
+        var platform = String(value).trim().toUpperCase();
+        return allowedPlatforms.indexOf(platform) >= 0 ? platform : undefined;
+      }
+
+      function normalizeLanguage(value) {
+        var lang = String(value || "ru").toLowerCase();
+        if (lang === "kz") {
+          return "kk";
+        }
+        if (lang === "kk" || lang === "en") {
+          return lang;
+        }
+        return "ru";
+      }
+
+      function t(key) {
+        var currentMessages = messages[state.lang] || {};
+        var fallbackMessages = messages.ru || {};
+        return currentMessages[key] || fallbackMessages[key] || "";
+      }
+
+      function applyLanguage(lang, updateUrl) {
+        state.lang = normalizeLanguage(lang);
+        document.documentElement.lang = state.lang;
+        document.title = t("documentTitle");
+        setMeta("description", t("metaDescription"));
+        setMeta("og:title", t("ogTitle"));
+        setMeta("og:description", t("ogDescription"));
+
+        document.querySelectorAll("[data-i18n]").forEach(function (element) {
+          var key = element.getAttribute("data-i18n");
+          element.textContent = t(key);
+        });
+
+        langButtons.forEach(function (button) {
+          var isActive = button.getAttribute("data-lang") === state.lang;
+          button.classList.toggle("is-active", isActive);
+          button.setAttribute("aria-pressed", isActive ? "true" : "false");
+        });
+
+        setSubmitLoading(state.isSubmitting);
+        renderAdapterHint();
+
+        updateUrlState(updateUrl);
+      }
+
+      function setMeta(name, content) {
+        var selector = name.indexOf("og:") === 0 ? "meta[property=\"" + name + "\"]" : "meta[name=\"" + name + "\"]";
+        var element = document.querySelector(selector);
+        if (element) {
+          element.setAttribute("content", content);
+        }
+      }
+
+      function compactObject(value) {
+        return Object.keys(value).reduce(function (result, key) {
+          if (value[key] !== undefined && value[key] !== null && value[key] !== "") {
+            result[key] = value[key];
+          }
+          return result;
+        }, {});
+      }
+
+      function phoneDigitsOnly(value) {
+        return String(value || "").replace(/\D/g, "");
+      }
+
+      function handlePhoneBeforeInput(event) {
+        if (event.data && !/^[0-9+\s()-]+$/.test(event.data)) {
+          event.preventDefault();
+          return;
+        }
+
+        if (event.inputType === "insertText" && event.data) {
+          if (handlePhonePrefixInput(event)) {
+            return;
+          }
+
+          shouldIgnoreNextTypedCountryCode = false;
+        }
+
+        if (event.inputType !== "deleteContentBackward") {
+          return;
+        }
+
+        var field = fields.phone;
+        var selectionStart = field.selectionStart;
+        var selectionEnd = field.selectionEnd;
+        if (selectionStart === null || selectionEnd === null || selectionStart !== selectionEnd || selectionStart === 0) {
+          return;
+        }
+
+        if (field.value === "+7" && selectionStart <= field.value.length) {
+          event.preventDefault();
+          field.value = "";
+          shouldIgnoreNextTypedCountryCode = false;
+          clearFieldError("phone");
+          hideFormError();
+          return;
+        }
+
+        if (/\d/.test(field.value.charAt(selectionStart - 1))) {
+          return;
+        }
+
+        var digitsBeforeCaret = phoneDigitsOnly(field.value.slice(0, selectionStart));
+        if (!digitsBeforeCaret) {
+          return;
+        }
+
+        event.preventDefault();
+        var digitIndexToRemove = digitsBeforeCaret.length - 1;
+        var digits = phoneDigitsOnly(field.value);
+        var nextDigits = digits.slice(0, digitIndexToRemove) + digits.slice(digitIndexToRemove + 1);
+        field.value = formatPhoneNumberFromDigits(nextDigits);
+        setPhoneCaretAfterDigitCount(field, digitIndexToRemove);
+        clearFieldError("phone");
+        hideFormError();
+      }
+
+      function handlePhonePrefixInput(event) {
+        var field = fields.phone;
+        var digits = phoneDigitsOnly(field.value);
+        var selectionStart = field.selectionStart;
+        var selectionEnd = field.selectionEnd;
+        var hasSelection = selectionStart !== null && selectionEnd !== null && selectionStart !== selectionEnd;
+
+        if (event.data === "+" && !digits) {
+          event.preventDefault();
+          field.value = "+7";
+          shouldIgnoreNextTypedCountryCode = true;
+          setPhoneCaretToEnd(field);
+          clearFieldError("phone");
+          hideFormError();
+          return true;
+        }
+
+        if (event.data === "8" && !digits && !hasSelection) {
+          event.preventDefault();
+          field.value = "+7";
+          shouldIgnoreNextTypedCountryCode = false;
+          setPhoneCaretToEnd(field);
+          clearFieldError("phone");
+          hideFormError();
+          return true;
+        }
+
+        if (event.data === "7" && shouldIgnoreNextTypedCountryCode && digits === "7") {
+          event.preventDefault();
+          shouldIgnoreNextTypedCountryCode = false;
+          setPhoneCaretToEnd(field);
+          return true;
+        }
+
+        return false;
+      }
+
+      function normalizePhoneDigits(value) {
+        var rawValue = String(value || "").trim();
+        var digits = phoneDigitsOnly(value);
+        if (!digits) {
+          if (rawValue === "+") {
+            return "7";
+          }
+          return "";
+        }
+
+        if (rawValue.indexOf("+7") === 0) {
+          digits = digits.charAt(0) === "7" ? digits : "7" + digits;
+        } else if (digits.length <= 10) {
+          digits = "7" + digits;
+        } else if (digits.charAt(0) === "8") {
+          digits = "7" + digits.slice(1);
+        } else if (digits.charAt(0) !== "7") {
+          digits = "7" + digits;
+        }
+
+        return digits.slice(0, 11);
+      }
+
+      function formatPhoneNumber(value) {
+        return formatPhoneNumberFromDigits(normalizePhoneDigits(value));
+      }
+
+      function formatPhoneNumberFromDigits(value) {
+        var digits = String(value || "").slice(0, 11);
+        var national = digits.charAt(0) === "7" ? digits.slice(1, 11) : digits.slice(0, 10);
+        var formatted = digits ? "+7" : "";
+
+        if (national.length > 0) {
+          formatted += " (" + national.slice(0, 3);
+        }
+
+        if (national.length >= 3) {
+          formatted += ")";
+        }
+
+        if (national.length > 3) {
+          formatted += " " + national.slice(3, 6);
+        }
+
+        if (national.length > 6) {
+          formatted += "-" + national.slice(6, 8);
+        }
+
+        if (national.length > 8) {
+          formatted += "-" + national.slice(8, 10);
+        }
+
+        return formatted;
+      }
+
+      function formatPhoneField() {
+        fields.phone.value = formatPhoneNumber(fields.phone.value);
+      }
+
+      function setPhoneCaretAfterDigitCount(field, digitCount) {
+        var caret = field.value.length;
+        var seenDigits = 0;
+
+        if (digitCount <= 0) {
+          caret = 0;
+        } else {
+          for (var index = 0; index < field.value.length; index += 1) {
+            if (/\d/.test(field.value.charAt(index))) {
+              seenDigits += 1;
+              if (seenDigits >= digitCount) {
+                caret = index + 1;
+                break;
+              }
+            }
+          }
+        }
+
+        window.setTimeout(function () {
+          field.setSelectionRange(caret, caret);
+        }, 0);
+      }
+
+      function setPhoneCaretToEnd(field) {
+        window.setTimeout(function () {
+          var end = field.value.length;
+          field.setSelectionRange(end, end);
+        }, 0);
+      }
+
+      function handleVisualViewportChange() {
+        updateKeyboardInset();
+        keepActiveFieldVisible();
+      }
+
+      function updateKeyboardInset() {
+        if (!window.visualViewport) {
+          return;
+        }
+
+        var inset = Math.max(0, window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop);
+        document.documentElement.style.setProperty("--keyboard-inset", Math.ceil(inset) + "px");
+      }
+
+      function scheduleFieldVisibilityCheck(field) {
+        fieldVisibilityTimers.forEach(function (timerId) {
+          window.clearTimeout(timerId);
+        });
+        fieldVisibilityTimers = [0, 120, 320].map(function (delay) {
+          return window.setTimeout(function () {
+            updateKeyboardInset();
+            keepFieldVisible(field);
+          }, delay);
+        });
+      }
+
+      function keepActiveFieldVisible() {
+        var activeElement = document.activeElement;
+        if (!activeElement || !form.contains(activeElement)) {
+          return;
+        }
+
+        keepFieldVisible(activeElement);
+      }
+
+      function keepFieldVisible(field) {
+        var target = field.closest(".field") || field.closest(".consent-row") || field;
+        var rect = target.getBoundingClientRect();
+        var viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+        var viewportTop = window.visualViewport ? window.visualViewport.offsetTop : 0;
+        var padding = 18;
+        var topLimit = viewportTop + padding;
+        var bottomLimit = viewportTop + viewportHeight - padding;
+
+        if (rect.bottom > bottomLimit) {
+          window.scrollBy({ top: rect.bottom - bottomLimit, behavior: "smooth" });
+        } else if (rect.top < topLimit) {
+          window.scrollBy({ top: rect.top - topLimit, behavior: "smooth" });
+        }
+      }
+
+      function normalizeTitle(value) {
+        return String(value || "")
+          .toLowerCase()
+          .replace(/adapter/g, "")
+          .replace(/[\/_]+/g, " ")
+          .replace(/\s*->\s*/g, " to ")
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+
+      function normalizeProductType(productType, productTitle) {
+        var type = String(productType || "").trim();
+        var directMatch = adapterOptions.find(function (option) {
+          return option.productType === type;
+        });
+
+        if (directMatch) {
+          return directMatch.productType;
+        }
+
+        var title = normalizeTitle(productTitle);
+        var titleMatch = adapterOptions.find(function (option) {
+          return normalizeTitle(option.productTitle) === title || option.aliases.some(function (alias) {
+            return normalizeTitle(alias) === title;
+          });
+        });
+
+        return titleMatch ? titleMatch.productType : DEFAULT_PRODUCT_TYPE;
+      }
+
+      function getSelectedAdapter() {
+        var productType = fields.adapterType.value || state.productType || DEFAULT_PRODUCT_TYPE;
+        return adapterOptions.find(function (option) {
+          return option.productType === productType;
+        }) || adapterOptions[0];
+      }
+
+      function updateAdapterSelection(updateUrl) {
+        state.productType = fields.adapterType.value || DEFAULT_PRODUCT_TYPE;
+        renderAdapterHint();
+        updateUrlState(updateUrl);
+      }
+
+      function updateUrlState(shouldUpdate) {
+        if (!shouldUpdate || !window.history || !window.history.replaceState) {
+          return;
+        }
+
+        var selected = getSelectedAdapter();
+        var url = new URL(window.location.href);
+        url.searchParams.set("lang", state.lang);
+        url.searchParams.set("productType", selected.productType);
+        url.searchParams.set("productTitle", selected.productTitle);
+        window.history.replaceState({}, "", url.toString());
+      }
+
+      function renderAdapterHint() {
+        var selected = getSelectedAdapter();
+        var currentMessages = messages[state.lang] || {};
+        var fallbackMessages = messages.ru || {};
+        var hints = currentMessages.adapterHints || fallbackMessages.adapterHints || {};
+        adapterHint.textContent = hints[selected.productType] || "";
+      }
+
+      function readForm() {
+        var selected = getSelectedAdapter();
+        return {
+          name: fields.name.value.trim(),
+          phone: fields.phone.value.trim(),
+          city: fields.city.value.trim(),
+          carModel: fields.carModel.value.trim(),
+          productType: selected.productType,
+          productTitle: selected.productTitle,
+          comment: fields.comment.value.trim(),
+          consent: fields.consent.checked
+        };
+      }
+
+      function validate(values) {
+        var isValid = true;
+        clearErrors();
+
+        if (!values.name) {
+          setFieldError("name", t("errorName"));
+          isValid = false;
+        }
+
+        if (!values.phone) {
+          setFieldError("phone", t("errorPhone"));
+          isValid = false;
+        } else if (normalizePhoneDigits(values.phone).length !== 11) {
+          setFieldError("phone", t("errorPhoneIncomplete"));
+          isValid = false;
+        }
+
+        if (!values.productType) {
+          setFieldError("adapterType", t("errorProductType"));
+          isValid = false;
+        }
+
+        if (!values.consent) {
+          setFieldError("consent", t("errorConsent"));
+          isValid = false;
+        }
+
+        return isValid;
+      }
+
+      function buildPayload(values) {
+        return compactObject({
+          name: values.name,
+          phone: values.phone,
+          city: values.city,
+          carModel: values.carModel,
+          comment: values.comment,
+          productType: values.productType,
+          productTitle: values.productTitle,
+          supplierId: state.supplierId,
+          source: compactObject(state.source),
+          consent: {
+            personalDataShareAccepted: true
+          }
+        });
+      }
+
+      async function handleSubmit(event) {
+        event.preventDefault();
+
+        if (state.isSubmitting) {
+          return;
+        }
+
+        var values = readForm();
+        if (!validate(values)) {
+          return;
+        }
+
+        state.isSubmitting = true;
+        setSubmitLoading(true);
+        hideFormError();
+
+        try {
+          var response = await createAdapterLead(buildPayload(values));
+          state.lead = response;
+          renderSuccess(response);
+        } catch (error) {
+          showFormError(error && error.isValidationError ? error.message : t("apiUnavailable"));
+        } finally {
+          state.isSubmitting = false;
+          setSubmitLoading(false);
+        }
+      }
+
+      function setSubmitLoading(isLoading) {
+        submitButton.disabled = isLoading;
+        submitButton.classList.toggle("is-loading", isLoading);
+        submitButton.setAttribute("aria-busy", isLoading ? "true" : "false");
+        submitButtonLabel.textContent = isLoading ? t("submitting") : t("submit");
+      }
+
+      async function createAdapterLead(payload) {
+        var response;
+
+        try {
+          response = await fetch(ADAPTER_LEADS_API_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Accept": "application/json"
+            },
+            body: JSON.stringify(payload)
+          });
+        } catch (error) {
+          throw new Error("Network unavailable");
+        }
+
+        var data = await parseJson(response);
+        if (!response.ok) {
+          var validationMessage = getValidationMessage(data);
+          var apiError = new Error(validationMessage || t("apiUnavailable"));
+          apiError.isValidationError = response.status === 400 || response.status === 422;
+          throw apiError;
+        }
+
+        return data;
+      }
+
+      async function parseJson(response) {
+        try {
+          return await response.json();
+        } catch (error) {
+          return {};
+        }
+      }
+
+      function getValidationMessage(data) {
+        if (!data || typeof data !== "object") {
+          return "";
+        }
+
+        if (typeof data.message === "string" && data.message.trim()) {
+          return data.message.trim();
+        }
+
+        if (typeof data.error === "string" && data.error.trim()) {
+          return data.error.trim();
+        }
+
+        if (Array.isArray(data.errors) && data.errors.length) {
+          return data.errors.map(function (item) {
+            if (typeof item === "string") {
+              return item;
+            }
+            return item && (item.message || item.detail || item.title);
+          }).filter(Boolean).join(" ");
+        }
+
+        return "";
+      }
+
+      function normalizeWhatsappUrl(value) {
+        if (typeof value !== "string") {
+          return "";
+        }
+
+        var parsedUrl;
+        try {
+          parsedUrl = new URL(value.trim());
+        } catch (error) {
+          return "";
+        }
+
+        if (parsedUrl.protocol === "https:" && parsedUrl.hostname === "wa.me") {
+          return parsedUrl.href;
+        }
+
+        if (parsedUrl.protocol === "https:" && parsedUrl.hostname === "api.whatsapp.com") {
+          return parsedUrl.pathname === "/send" || parsedUrl.pathname === "/send/" ? parsedUrl.href : "";
+        }
+
+        if (parsedUrl.protocol === "whatsapp:" && parsedUrl.hostname === "send") {
+          return parsedUrl.pathname === "" || parsedUrl.pathname === "/" ? parsedUrl.href : "";
+        }
+
+        return "";
+      }
+
+      function renderSuccess(response) {
+        var leadId = response.leadId || "";
+        var productTitle = response.productTitle || getSelectedAdapter().productTitle || DEFAULT_PRODUCT_TITLE;
+        var whatsapp = response.whatsapp || {};
+        var whatsappUrl = normalizeWhatsappUrl(whatsapp.url);
+
+        leadIdEl.textContent = leadId;
+        productTitleEl.textContent = productTitle;
+
+        if (whatsappUrl) {
+          whatsappButton.href = whatsappUrl;
+          whatsappButton.hidden = false;
+        } else {
+          whatsappButton.href = "#";
+          whatsappButton.hidden = true;
+        }
+
+        if (!whatsappUrl && whatsapp.messageText) {
+          whatsappFallback.textContent = whatsapp.messageText;
+          whatsappFallback.hidden = false;
+        } else {
+          whatsappFallback.hidden = true;
+        }
+
+        form.hidden = true;
+        successPanel.hidden = false;
+        successPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
+      async function handleWhatsappClick(event) {
+        if (!state.lead || !state.lead.leadId || !state.lead.whatsapp || !state.lead.whatsapp.url) {
+          return;
+        }
+
+        event.preventDefault();
+        var url = normalizeWhatsappUrl(state.lead.whatsapp.url);
+        if (!url) {
+          return;
+        }
+
+        try {
+          await trackWhatsappOpened(state.lead.leadId);
+        } catch (error) {
+          // WhatsApp must still open even if tracking fails.
+        } finally {
+          window.location.href = url;
+        }
+      }
+
+      async function trackWhatsappOpened(leadId) {
+        var controller = window.AbortController ? new AbortController() : null;
+        var timeoutId = controller ? window.setTimeout(function () {
+          controller.abort();
+        }, 900) : null;
+
+        try {
+          await fetch(ADAPTER_LEADS_API_URL + "/" + encodeURIComponent(leadId) + "/whatsapp-opened", {
+            method: "POST",
+            headers: {
+              "Accept": "application/json"
+            },
+            keepalive: true,
+            signal: controller ? controller.signal : undefined
+          });
+        } finally {
+          if (timeoutId) {
+            window.clearTimeout(timeoutId);
+          }
+        }
+      }
+
+      async function copyLeadId() {
+        var value = leadIdEl.textContent;
+        if (!value) {
+          return;
+        }
+
+        try {
+          await navigator.clipboard.writeText(value);
+          copyLeadButton.textContent = t("copied");
+          window.setTimeout(function () {
+            copyLeadButton.textContent = t("copy");
+          }, 1600);
+        } catch (error) {
+          copyLeadButton.textContent = t("selectId");
+          window.setTimeout(function () {
+            copyLeadButton.textContent = t("copy");
+          }, 1600);
+        }
+      }
+
+      function setFieldError(name, message) {
+        var errorEl = document.getElementById(name + "-error");
+        if (errorEl) {
+          errorEl.textContent = message;
+        }
+
+        if (fields[name]) {
+          fields[name].setAttribute("aria-invalid", "true");
+        }
+      }
+
+      function clearFieldError(name) {
+        var errorEl = document.getElementById(name + "-error");
+        if (errorEl) {
+          errorEl.textContent = "";
+        }
+
+        if (fields[name]) {
+          fields[name].removeAttribute("aria-invalid");
+        }
+      }
+
+      function clearErrors() {
+        Object.keys(fields).forEach(clearFieldError);
+        hideFormError();
+      }
+
+      function showFormError(message) {
+        formError.textContent = message;
+        formError.classList.add("is-visible");
+      }
+
+      function hideFormError() {
+        formError.textContent = "";
+        formError.classList.remove("is-visible");
+      }
+    })();
+  </script>
+</body>
+
+</html>

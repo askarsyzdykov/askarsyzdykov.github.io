@@ -90,6 +90,7 @@ function main() {
   const entries = [
     { loc: `${SITE_URL}/`, lastmod: fileLastModifiedIso(path.join(ROOT_DIR, "index.html")) },
     { loc: `${SITE_URL}/app/`, lastmod: fileLastModifiedIso(path.join(ROOT_DIR, "app", "index.html")) },
+    { loc: `${SITE_URL}/adapters/request/`, lastmod: fileLastModifiedIso(path.join(ROOT_DIR, "adapters", "request", "index.html")) },
     { loc: `${SITE_URL}/faq/`, lastmod: faqLastModifiedIso() },
     { loc: `${SITE_URL}/blog/`, lastmod: blogLastModifiedIso() },
     { loc: `${SITE_URL}/stations/`, lastmod: stationsLastModifiedIso() }
