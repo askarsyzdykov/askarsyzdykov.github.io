@@ -33,9 +33,12 @@ window.ADAPTER_REQUEST_MESSAGES = {
     errorConsent: "Подтвердите согласие, чтобы продолжить.",
     apiUnavailable: "Не удалось отправить заявку. Попробуйте позже.",
     adapterHints: {
-      GBT_DC_TO_CCS1: "Нужен, если зарядная станция имеет быстрый DC-порт GBT (китайский стандарт), а ваш автомобиль принимает быструю зарядку через CCS 1. То есть адаптер помогает подключить машину с CCS 1 к китайской DC-станции.",
-      GBT_DC_TO_CCS2: "Нужен, если зарядная станция имеет быстрый DC-порт GBT (китайский стандарт), а ваш автомобиль принимает быструю зарядку через CCS 2. Частый сценарий: европейский разъём CCS 2 на авто и китайская DC-зарядка.",
-      CCS2_TO_GBT_DC: "Нужен, если зарядная станция имеет быстрый DC-порт CCS 2, а ваш автомобиль принимает быструю зарядку через GBT DC (китайский стандарт). Адаптер помогает подключить электромобиль с GBT DC к станции CCS 2."
+      GBT_DC_TO_CCS1: "Нужен, если зарядная станция имеет быстрый DC-порт GBT (китайский стандарт), а ваш автомобиль принимает быструю зарядку через CCS 1. Например: Hyundai Ioniq 5 и Kia EV6 из Кореи.",
+      GBT_DC_TO_CCS2: "Нужен, если зарядная станция имеет быстрый DC-порт GBT (китайский стандарт), а ваш автомобиль принимает быструю зарядку через CCS 2. Например: Volkswagen ID.4, BMW iX или Mercedes-Benz EQE из Европы.",
+      CCS2_TO_GBT_DC: "Нужен, если зарядная станция имеет быстрый DC-порт CCS 2, а ваш автомобиль принимает быструю зарядку через GBT DC (китайский стандарт). Например: Zeekr 001, BYD Han EV или Volkswagen ID.6 из Китая.",
+      CCS2_TO_CCS1: "Нужен, если зарядная станция имеет быстрый DC-порт CCS 2, а ваш автомобиль принимает быструю зарядку через CCS 1. Например: Ford Mustang Mach-E, Chevrolet Bolt EV или Hyundai Ioniq 5 из США/Кореи.",
+      CCS2_TO_NACS: "Нужен, если зарядная станция имеет быстрый DC-порт CCS 2, а ваш автомобиль принимает быструю зарядку через NACS. Например: Tesla Model 3 или Tesla Model Y из США.",
+      I_DONT_KNOW: "Выберите этот вариант, если не уверены в типе разъема. Укажите модель авто и город, а поставщик поможет подобрать подходящий адаптер."
     }
   },
   kk: {
@@ -72,9 +75,12 @@ window.ADAPTER_REQUEST_MESSAGES = {
     errorConsent: "Жалғастыру үшін келісімді растаңыз.",
     apiUnavailable: "Өтінімді жіберу мүмкін болмады. Кейінірек қайталап көріңіз.",
     adapterHints: {
-      GBT_DC_TO_CCS1: "Зарядтау станциясында жылдам DC GBT порты (қытай стандарты), ал автокөлігіңізде жылдам зарядтауға арналған CCS 1 порты болса керек. Яғни адаптер CCS 1 көлігін қытайлық DC станциясына қосуға көмектеседі.",
-      GBT_DC_TO_CCS2: "Зарядтау станциясында жылдам DC GBT порты (қытай стандарты), ал автокөлігіңізде жылдам зарядтауға арналған CCS 2 порты болса керек. Жиі кездесетін жағдай: көлікте еуропалық CCS 2, ал станцияда қытайлық DC GBT.",
-      CCS2_TO_GBT_DC: "Зарядтау станциясында жылдам DC CCS 2 порты, ал автокөлігіңіз GBT DC (қытай стандарты) арқылы зарядталса керек. Адаптер GBT DC порты бар электромобильді CCS 2 станциясына қосуға көмектеседі."
+      GBT_DC_TO_CCS1: "Зарядтау станциясында жылдам DC GBT порты (қытай стандарты), ал автокөлігіңізде жылдам зарядтауға арналған CCS 1 порты болса керек. Мысалы: Кореядан келген Hyundai Ioniq 5 және Kia EV6.",
+      GBT_DC_TO_CCS2: "Зарядтау станциясында жылдам DC GBT порты (қытай стандарты), ал автокөлігіңізде жылдам зарядтауға арналған CCS 2 порты болса керек. Мысалы: Еуропадан келген Volkswagen ID.4, BMW iX немесе Mercedes-Benz EQE.",
+      CCS2_TO_GBT_DC: "Зарядтау станциясында жылдам DC CCS 2 порты, ал автокөлігіңіз GBT DC (қытай стандарты) арқылы зарядталса керек. Мысалы: Қытайдан келген Zeekr 001, BYD Han EV немесе Volkswagen ID.6.",
+      CCS2_TO_CCS1: "Зарядтау станциясында жылдам DC CCS 2 порты, ал автокөлігіңізде жылдам зарядтауға арналған CCS 1 порты болса керек. Мысалы: АҚШ/Кореядан келген Ford Mustang Mach-E, Chevrolet Bolt EV немесе Hyundai Ioniq 5.",
+      CCS2_TO_NACS: "Зарядтау станциясында жылдам DC CCS 2 порты, ал автокөлігіңіз NACS арқылы жылдам зарядталса керек. Мысалы: АҚШ-дан келген Tesla Model 3 немесе Tesla Model Y.",
+      I_DONT_KNOW: "Разъем түріне сенімді болмасаңыз, осы нұсқаны таңдаңыз. Автокөлік моделін және қалаңызды көрсетіңіз, жеткізуші қолайлы адаптерді таңдауға көмектеседі."
     }
   },
   en: {
@@ -111,9 +117,12 @@ window.ADAPTER_REQUEST_MESSAGES = {
     errorConsent: "Please accept the consent to continue.",
     apiUnavailable: "Could not submit the request. Please try again later.",
     adapterHints: {
-      GBT_DC_TO_CCS1: "Use this when the charging station has a fast DC GBT port (the Chinese standard), and your car accepts fast charging through CCS 1. In plain terms: it lets a CCS 1 car plug into a Chinese DC fast charger.",
-      GBT_DC_TO_CCS2: "Use this when the charging station has a fast DC GBT port (the Chinese standard), and your car accepts fast charging through CCS 2. A common case is a car with a European CCS 2 inlet and a Chinese DC GBT charger.",
-      CCS2_TO_GBT_DC: "Use this when the charging station has a fast DC CCS 2 port, and your car accepts fast charging through GBT DC (the Chinese standard). It helps connect a GBT DC EV to a CCS 2 fast charger."
+      GBT_DC_TO_CCS1: "Use this when the charging station has a fast DC GBT port (the Chinese standard), and your car accepts fast charging through CCS 1. Examples: Hyundai Ioniq 5 and Kia EV6 from Korea.",
+      GBT_DC_TO_CCS2: "Use this when the charging station has a fast DC GBT port (the Chinese standard), and your car accepts fast charging through CCS 2. Examples: Volkswagen ID.4, BMW iX or Mercedes-Benz EQE from Europe.",
+      CCS2_TO_GBT_DC: "Use this when the charging station has a fast DC CCS 2 port, and your car accepts fast charging through GBT DC (the Chinese standard). Examples: Zeekr 001, BYD Han EV or Volkswagen ID.6 from China.",
+      CCS2_TO_CCS1: "Use this when the charging station has a fast DC CCS 2 port, and your car accepts fast charging through CCS 1. Examples: Ford Mustang Mach-E, Chevrolet Bolt EV or Hyundai Ioniq 5 from the US/Korea.",
+      CCS2_TO_NACS: "Use this when the charging station has a fast DC CCS 2 port, and your car accepts fast charging through NACS. Examples: Tesla Model 3 or Tesla Model Y from the US.",
+      I_DONT_KNOW: "Choose this if you are not sure which connector type you need. Add your car model and city, and the supplier will help choose the right adapter."
     }
   }
 };

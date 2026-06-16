@@ -72,6 +72,9 @@
               <option value="GBT_DC_TO_CCS1">GBT DC -> CCS 1</option>
               <option value="GBT_DC_TO_CCS2">GBT DC -> CCS 2</option>
               <option value="CCS2_TO_GBT_DC">CCS 2 -> GBT DC</option>
+              <option value="CCS2_TO_CCS1">CCS 2 -> CCS 1</option>
+              <option value="CCS2_TO_NACS">CCS 2 -> NACS</option>
+              <option value="I_DONT_KNOW">Не знаю</option>
             </select>
             <div class="adapter-hint" id="adapter-hint"></div>
             <div class="error-text" id="adapterType-error" aria-live="polite"></div>
@@ -145,6 +148,21 @@
           productType: "CCS2_TO_GBT_DC",
           productTitle: "CCS 2 -> GBT DC",
           aliases: ["CCS2 to GBT DC", "CCS 2 to GBT DC"]
+        },
+        {
+          productType: "CCS2_TO_CCS1",
+          productTitle: "CCS 2 -> CCS 1",
+          aliases: ["CCS2 to CCS1", "CCS 2 to CCS 1", "CCS 2 -> CCS1"]
+        },
+        {
+          productType: "CCS2_TO_NACS",
+          productTitle: "CCS 2 -> NACS",
+          aliases: ["CCS2 to NACS", "CCS 2 to NACS"]
+        },
+        {
+          productType: "I_DONT_KNOW",
+          productTitle: "Не знаю",
+          aliases: ["I don't know", "Not sure", "Не знаю"]
         }
       ];
       var messages = window.ADAPTER_REQUEST_MESSAGES || {};
