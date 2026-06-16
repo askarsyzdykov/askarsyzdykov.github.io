@@ -128,7 +128,6 @@
       var DEFAULT_PRODUCT_TITLE = "GBT DC -> CCS 1";
       var ADAPTER_LEADS_API_URL = "https://api.evpoint.kz/api/adapter-leads";
       var allowedPlatforms = ["GOOGLE", "APPLE", "WEB"];
-      var fieldVisibilityTimers = [];
       var shouldIgnoreNextTypedCountryCode = false;
       var params = new URLSearchParams(window.location.search);
       var adapterOptions = [
@@ -215,15 +214,11 @@
           clearFieldError(key);
           hideFormError();
         });
-
-        field.addEventListener("focus", function () {
-          scheduleFieldVisibilityCheck(field);
-        });
       });
 
       if (window.visualViewport) {
-        window.visualViewport.addEventListener("resize", handleVisualViewportChange);
-        window.visualViewport.addEventListener("scroll", handleVisualViewportChange);
+        window.visualViewport.addEventListener("resize", updateKeyboardInset);
+        window.visualViewport.addEventListener("scroll", updateKeyboardInset);
         updateKeyboardInset();
       }
 
@@ -483,11 +478,6 @@
         }, 0);
       }
 
-      function handleVisualViewportChange() {
-        updateKeyboardInset();
-        keepActiveFieldVisible();
-      }
-
       function updateKeyboardInset() {
         if (!window.visualViewport) {
           return;
@@ -495,43 +485,6 @@
 
         var inset = Math.max(0, window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop);
         document.documentElement.style.setProperty("--keyboard-inset", Math.ceil(inset) + "px");
-      }
-
-      function scheduleFieldVisibilityCheck(field) {
-        fieldVisibilityTimers.forEach(function (timerId) {
-          window.clearTimeout(timerId);
-        });
-        fieldVisibilityTimers = [0, 120, 320].map(function (delay) {
-          return window.setTimeout(function () {
-            updateKeyboardInset();
-            keepFieldVisible(field);
-          }, delay);
-        });
-      }
-
-      function keepActiveFieldVisible() {
-        var activeElement = document.activeElement;
-        if (!activeElement || !form.contains(activeElement)) {
-          return;
-        }
-
-        keepFieldVisible(activeElement);
-      }
-
-      function keepFieldVisible(field) {
-        var target = field.closest(".field") || field.closest(".consent-row") || field;
-        var rect = target.getBoundingClientRect();
-        var viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-        var viewportTop = window.visualViewport ? window.visualViewport.offsetTop : 0;
-        var padding = 18;
-        var topLimit = viewportTop + padding;
-        var bottomLimit = viewportTop + viewportHeight - padding;
-
-        if (rect.bottom > bottomLimit) {
-          window.scrollBy({ top: rect.bottom - bottomLimit, behavior: "smooth" });
-        } else if (rect.top < topLimit) {
-          window.scrollBy({ top: rect.top - topLimit, behavior: "smooth" });
-        }
       }
 
       function normalizeTitle(value) {
