@@ -11,6 +11,8 @@ const escapeHtml = (value) => String(value ?? "")
   .replace(/>/g, "&gt;")
   .replace(/"/g, "&quot;");
 
+const core = require("../wanted/core.js");
+
 const statusLabels = {
   collecting_votes: "Собирает поддержку",
   sent_to_operators: "Передано операторам",
@@ -22,7 +24,7 @@ const statusLabels = {
 };
 
 for (const item of JSON.parse(fs.readFileSync(input, "utf8"))) {
-  const title = `${item.placeLabel} — ${item.votesCount} голосов | evPoint.kz`;
+  const title = `${item.placeLabel} — ${item.votesCount} ${core.pluralVotes(item.votesCount, "ru")} | evPoint.kz`;
   const description = `${statusLabels[item.status] || "Предложение"}. ${item.reason}`;
   const url = `https://evpoint.kz/wanted/${encodeURIComponent(item.id)}`;
   const html = `<!doctype html>

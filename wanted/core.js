@@ -39,5 +39,17 @@
   function nearby(items, point, radius) { return items.filter(function (item) { return !["archived", "rejected"].includes(item.status) && distanceMeters(item, point) <= (radius || 300); }).sort(function (a, b) { return distanceMeters(a, point) - distanceMeters(b, point); }); }
   function inBounds(item, bounds) { return !bounds || (item.latitude >= bounds.south && item.latitude <= bounds.north && item.longitude >= bounds.west && item.longitude <= bounds.east); }
   function matches(item, filters) { return (!filters.status || item.status === filters.status) && (!filters.locationType || item.locationType === filters.locationType) && (!filters.chargerType || item.chargerType === filters.chargerType); }
-  return { LOCATION_TYPES: LOCATION_TYPES, FREQUENCIES: FREQUENCIES, CHARGER_TYPES: CHARGER_TYPES, STATUSES: STATUSES, clean: clean, validateProposal: validateProposal, distanceMeters: distanceMeters, nearby: nearby, inBounds: inBounds, matches: matches };
+  function pluralVotes(count, lang) {
+    var l = (lang || "ru").slice(0, 2).toLowerCase();
+    var n = Math.abs(Number(count) || 0);
+    if (l === "kk" || l === "kz") return "дауыс";
+    if (l === "en") return n === 1 ? "vote" : "votes";
+    var mod10 = n % 10;
+    var mod100 = n % 100;
+    if (mod100 >= 11 && mod100 <= 14) return "голосов";
+    if (mod10 === 1) return "голос";
+    if (mod10 >= 2 && mod10 <= 4) return "голоса";
+    return "голосов";
+  }
+  return { LOCATION_TYPES: LOCATION_TYPES, FREQUENCIES: FREQUENCIES, CHARGER_TYPES: CHARGER_TYPES, STATUSES: STATUSES, clean: clean, validateProposal: validateProposal, distanceMeters: distanceMeters, nearby: nearby, inBounds: inBounds, matches: matches, pluralVotes: pluralVotes };
 }));

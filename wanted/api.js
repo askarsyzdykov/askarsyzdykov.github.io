@@ -93,13 +93,13 @@
     if (!auth) {
       return Promise.resolve({ user: null });
     }
-    return new Promise(function (resolve) {
-      var unsubscribe = auth.onAuthStateChanged(function (fbUser) {
-        unsubscribe();
-        resolve({ user: formatUser(fbUser) });
-      }, function () {
-        resolve({ user: null });
-      });
+    if (auth.currentUser) {
+      return Promise.resolve({ user: formatUser(auth.currentUser) });
+    }
+    return waitForAuthReady().then(function (fbUser) {
+      return { user: formatUser(fbUser || auth.currentUser) };
+    }).catch(function () {
+      return { user: null };
     });
   }
 
