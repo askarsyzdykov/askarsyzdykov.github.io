@@ -87,6 +87,7 @@ ${body}
 }
 
 function main() {
+  const wantedItems = readJson(path.join(ROOT_DIR, "data", "wanted-seed.json"));
   const entries = [
     { loc: `${SITE_URL}/`, lastmod: fileLastModifiedIso(path.join(ROOT_DIR, "index.html")) },
     { loc: `${SITE_URL}/app/`, lastmod: fileLastModifiedIso(path.join(ROOT_DIR, "app", "index.html")) },
@@ -94,6 +95,9 @@ function main() {
     { loc: `${SITE_URL}/faq/`, lastmod: faqLastModifiedIso() },
     { loc: `${SITE_URL}/blog/`, lastmod: blogLastModifiedIso() },
     { loc: `${SITE_URL}/stations/`, lastmod: stationsLastModifiedIso() }
+    ,{ loc: `${SITE_URL}/wanted/`, lastmod: fileLastModifiedIso(path.join(ROOT_DIR, "wanted", "index.html")) }
+    ,{ loc: `${SITE_URL}/wanted/new`, lastmod: fileLastModifiedIso(path.join(ROOT_DIR, "wanted", "new", "index.html")) }
+    ,...wantedItems.map((item) => ({ loc: `${SITE_URL}/wanted/${encodeURIComponent(item.id)}`, lastmod: normalizeIsoDate(item.updatedAt || item.createdAt) }))
   ];
 
   fs.writeFileSync(OUTPUT_PATH, renderSitemap(entries));

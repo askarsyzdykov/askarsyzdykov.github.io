@@ -1,0 +1,10 @@
+const test=require("node:test"),assert=require("node:assert/strict"),core=require("../wanted/core.js");
+const valid={latitude:43.2389,longitude:76.8897,placeLabel:"Двор на Абая",locationType:"residential",reason:"Ближайшая зарядка всегда занята",frequency:"daily",chargerType:"ac",connectors:["Type 2"]};
+test("validates a complete proposal",()=>assert.equal(core.validateProposal(valid).valid,true));
+test("validates a proposal without a frequency answer",()=>{const input={...valid};delete input.frequency;assert.equal(core.validateProposal(input).valid,true);});
+test("keeps multiple optional connector selections",()=>assert.deepEqual(core.validateProposal({...valid,connectors:["GB/T","NACS"]}).value.connectors,["GB/T","NACS"]));
+test("rejects coordinates outside Kazakhstan",()=>assert.equal(core.validateProposal({...valid,latitude:12}).errors.coordinates,"invalid"));
+test("cleans unsafe user text",()=>assert.equal(core.clean(" <b> test </b> ",50),"b test /b"));
+test("finds nearby proposals within 300 metres",()=>{const items=[{...valid,id:"near",status:"collecting_votes"},{...valid,id:"far",latitude:44,status:"collecting_votes"}];assert.deepEqual(core.nearby(items,valid,300).map(x=>x.id),["near"]);});
+test("filters map records",()=>assert.equal(core.matches(valid,{locationType:"residential",chargerType:"ac"}),true));
+test("accepts concise reason text",()=>assert.equal(core.validateProposal({...valid,reason:"Дом"}).valid,true));

@@ -28,6 +28,12 @@
   </style>
   <script>
     (function () {
+      if (/^\/wanted\/[^/]+\/?$/.test(window.location.pathname)) {
+        fetch("/wanted/index.html").then(function (response) { return response.text(); }).then(function (html) {
+          document.open(); document.write(html); document.close();
+        });
+        return;
+      }
       if (window.location.hostname === "blog.evpoint.kz") {
         var target = "https://evpoint.kz/blog" + window.location.pathname + window.location.search + window.location.hash;
         window.location.replace(target);

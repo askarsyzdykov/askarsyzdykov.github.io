@@ -111,6 +111,7 @@
 							</div>
 							<div class="quick-links-pills">
 								<a class="quick-link-pill" href="/stations/">Каталог станций</a>
+								<a class="quick-link-pill" id="wanted-banner" href="/wanted/">Где нужна зарядка</a>
 								<a class="quick-link-pill" href="/faq/">FAQ по зарядке</a>
 								<a class="quick-link-pill" href="/blog/2026/03/19/route-planning.html">Маршруты для электромобиля</a>
 								<a class="quick-link-pill" href="/blog/2025/11/13/charge-calculator.html">Калькулятор зарядки</a>
@@ -124,6 +125,10 @@
 	</div>
 	<script>
 		document.addEventListener("DOMContentLoaded", function () {
+			var wantedBanner = document.getElementById("wanted-banner");
+			if (wantedBanner) wantedBanner.addEventListener("click", function () {
+				if (typeof window.gtag === "function") window.gtag("event", "wanted_banner_click");
+			});
 			var toggler = document.querySelector(".navbar-toggler");
 			var menu = document.getElementById("navbarSupportedContent");
 

@@ -9,4 +9,4 @@ PORT="${1:-4000}"
 "$ROOT_DIR/scripts/build-pages.sh"
 
 echo "Serving $BUILD_DIR at http://127.0.0.1:$PORT"
-exec python3 -m http.server "$PORT" --bind 127.0.0.1 --directory "$BUILD_DIR"
+exec node "$ROOT_DIR/scripts/serve-pages.js" "$BUILD_DIR" "$PORT"
