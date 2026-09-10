@@ -39,45 +39,14 @@
     } catch (e) {}
   }
 
-  var STORAGE_KEY_MY_PROPOSALS = "evpoint_wanted_my_proposals";
-  function getMyProposalIds() {
-    try {
-      var raw = localStorage.getItem(STORAGE_KEY_MY_PROPOSALS);
-      if (raw) {
-        var parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) return parsed;
-      }
-    } catch (e) {}
-    return [];
-  }
-
-  function saveMyProposalId(id) {
-    if (!id) return;
-    try {
-      var list = getMyProposalIds();
-      if (list.indexOf(id) === -1) {
-        list.push(id);
-        localStorage.setItem(STORAGE_KEY_MY_PROPOSALS, JSON.stringify(list));
-      }
-    } catch (e) {}
-  }
-
   var currentSessionUser = null;
   WantedApi.session().then(function (session) {
     if (session && session.user) currentSessionUser = session.user;
   }).catch(function () {});
 
-  function checkIsAuthor(item, user) {
+  function checkIsAuthor(item) {
     if (!item) return false;
-    if (item.viewerIsAuthor || item.isAuthor) return true;
-    var myIds = getMyProposalIds();
-    if (item.id && myIds.indexOf(item.id) !== -1) return true;
-    var u = user || currentSessionUser;
-    if (u && u.id) {
-      if (item.userId && item.userId === u.id) return true;
-      if (item.authorId && item.authorId === u.id) return true;
-    }
-    return false;
+    return Boolean(item.isAuthor);
   }
 
   function pluralVotes(count) {
@@ -318,10 +287,10 @@
   }
 
   function sheetCard(item) {
-    var isAuthor = checkIsAuthor(item, currentSessionUser);
+    var isAuthor = checkIsAuthor(item);
     var hasVoted = Boolean(item.viewerHasVoted || isAuthor);
     var chevronSvg = '<svg class="sheet-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>';
-    var shareSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>';
+    var shareSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>';
     var chargerLabel = (item.chargerType && item.chargerType !== "unknown" && (t.chargers[item.chargerType] || item.chargerType)) ? (t.chargers[item.chargerType] || item.chargerType) : "";
     var placeInfo = esc(t.locations[item.locationType] || item.locationType) + (chargerLabel ? " · " + esc(chargerLabel) : "");
     var voteBtnText = isAuthor ? ("✓ " + t.youAuthor) : (hasVoted ? ("✓ " + t.supported) : (t.addVote || t.support));
@@ -523,10 +492,11 @@
       if (voteBtn) {
         voteBtn.onclick = function (e) {
           e.preventDefault();
-          if (checkIsAuthor(item, currentSessionUser)) return;
+          if (checkIsAuthor(item)) return;
           ensureAuth(function (session) {
             if (session && session.user) currentSessionUser = session.user;
-            if (checkIsAuthor(item, currentSessionUser)) {
+            if (checkIsAuthor(item)) {
+              item.isAuthor = true;
               item.viewerHasVoted = true;
               voteBtn.textContent = "✓ " + t.youAuthor;
               voteBtn.classList.add("voted", "is-author");
@@ -539,19 +509,28 @@
             WantedApi.vote(item.id, target).then(function (updated) {
               item.votesCount = updated.votesCount;
               item.viewerHasVoted = updated.viewerHasVoted;
+              if (updated && updated.isAuthor) item.isAuthor = true;
               var inList = items.find(function (x) { return x.id === item.id; });
               if (inList) {
                 inList.votesCount = updated.votesCount;
                 inList.viewerHasVoted = updated.viewerHasVoted;
+                if (item.isAuthor) inList.isAuthor = true;
                 draw();
               }
               var countEl = sheetContent.querySelector(".sheet-votes-num");
               var labelEl = sheetContent.querySelector(".sheet-votes-label");
               if (countEl) countEl.textContent = item.votesCount;
               if (labelEl) labelEl.textContent = pluralVotes(item.votesCount);
-              voteBtn.textContent = item.viewerHasVoted ? "✓ " + t.supported : (t.addVote || t.support);
-              voteBtn.classList.toggle("voted", item.viewerHasVoted);
-              voteBtn.disabled = false;
+              if (checkIsAuthor(item)) {
+                voteBtn.textContent = "✓ " + t.youAuthor;
+                voteBtn.classList.add("voted", "is-author");
+                voteBtn.disabled = true;
+                voteBtn.title = t.cantRemoveAuthorVote;
+              } else {
+                voteBtn.textContent = item.viewerHasVoted ? "✓ " + t.supported : (t.addVote || t.support);
+                voteBtn.classList.toggle("voted", item.viewerHasVoted);
+                voteBtn.disabled = false;
+              }
               track(item.viewerHasVoted ? "wanted_vote" : "wanted_vote_cancel", { proposal_id: item.id });
             }).catch(function (err) {
               voteBtn.disabled = false;
@@ -562,8 +541,8 @@
 
         WantedApi.getVote(item.id).then(function (res) {
           if (res) {
-            if (res.isAuthor || res.viewerIsAuthor) item.viewerIsAuthor = true;
-            var isAuthor = checkIsAuthor(item, currentSessionUser);
+            if (res.isAuthor) item.isAuthor = true;
+            var isAuthor = checkIsAuthor(item);
             if (isAuthor) {
               item.viewerHasVoted = true;
               voteBtn.textContent = "✓ " + t.youAuthor;
@@ -1121,7 +1100,6 @@
     function publish(value) {
       WantedApi.create(value).then(function (item) {
         track("wanted_create_success", { proposal_id: item.id });
-        saveMyProposalId(item.id);
         openCreatedModal(item);
       }).catch(function (error) {
         submit.disabled = false;
@@ -1147,7 +1125,7 @@
         saveMapState(item.latitude, item.longitude, 14);
       }
 
-      var isAuthor = checkIsAuthor(item, currentSessionUser);
+      var isAuthor = checkIsAuthor(item);
       if (isAuthor) item.viewerHasVoted = true;
 
       track("wanted_proposal_open", { proposal_id: id });
@@ -1208,8 +1186,13 @@
       bindLanguages();
 
       function updateVoteButtonState(hasVoted, forceAuthor) {
-        var isAuth = forceAuthor !== undefined ? forceAuthor : checkIsAuthor(item, currentSessionUser);
-        item.viewerHasVoted = Boolean(hasVoted || isAuth);
+        var isAuth = forceAuthor !== undefined ? Boolean(forceAuthor) : checkIsAuthor(item);
+        if (isAuth) {
+          item.isAuthor = true;
+          item.viewerHasVoted = true;
+        } else {
+          item.viewerHasVoted = Boolean(hasVoted);
+        }
         var voteBtn = document.getElementById("vote");
         if (voteBtn) {
           if (isAuth) {
@@ -1229,13 +1212,13 @@
 
       WantedApi.getVote(id).then(function (res) {
         if (res) {
-          if (res.isAuthor || res.viewerIsAuthor) item.viewerIsAuthor = true;
-          var isAuth = checkIsAuthor(item, currentSessionUser);
+          if (res.isAuthor) item.isAuthor = true;
+          var isAuth = checkIsAuthor(item);
           if (isAuth) {
             updateVoteButtonState(true, true);
           } else if (res.voted != null || res.viewerHasVoted != null || res.hasVoted != null) {
             var hasVoted = Boolean(res.voted || res.viewerHasVoted || res.hasVoted);
-            updateVoteButtonState(hasVoted, false);
+            updateVoteButtonState(hasVoted);
           }
         }
       }).catch(function () {});
@@ -1250,13 +1233,13 @@
         vote.title = t.cantRemoveAuthorVote;
       }
       vote.onclick = function () {
-        if (checkIsAuthor(item, currentSessionUser)) {
+        if (checkIsAuthor(item)) {
           updateVoteButtonState(true, true);
           return;
         }
         ensureAuth(function (session) {
           if (session && session.user) currentSessionUser = session.user;
-          if (checkIsAuthor(item, currentSessionUser)) {
+          if (checkIsAuthor(item)) {
             updateVoteButtonState(true, true);
             return;
           }
@@ -1268,8 +1251,9 @@
             var labelEl = document.getElementById("vote-label");
             if (labelEl) labelEl.textContent = pluralVotes(item.votesCount);
             var hasVoted = updated && updated.viewerHasVoted != null ? Boolean(updated.viewerHasVoted) : target;
-            updateVoteButtonState(hasVoted, false);
-            vote.disabled = false;
+            if (updated && updated.isAuthor) item.isAuthor = true;
+            updateVoteButtonState(hasVoted);
+            vote.disabled = checkIsAuthor(item);
             track(hasVoted ? "wanted_vote" : "wanted_vote_cancel", { proposal_id: id });
           }).catch(function (err) {
             vote.disabled = false;
