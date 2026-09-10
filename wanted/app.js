@@ -138,7 +138,7 @@
   function header(back) {
     var left = back
       ? '<a class="back-link" href="/wanted/">← ' + t.back + "</a>"
-      : '<a class="brand" href="/">evPoint.kz</a>';
+      : '<a class="brand" href="/"><img class="brand-logo" src="/images/evpoint_logo.svg" alt="evPoint.kz" width="32" height="32">evPoint.kz</a>';
     return '<header class="topbar">' + left + '<div class="top-actions">' +
       languages() + "</div></header>";
   }
