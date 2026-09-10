@@ -23,7 +23,7 @@
     };
     var errors = {};
     if (value.latitude === null || value.longitude === null || !validCoordinate(value.latitude, value.longitude)) errors.coordinates = "invalid";
-    if (!value.placeLabel || value.placeLabel.length < 2) errors.placeLabel = "required";
+    if (value.placeLabel && value.placeLabel.length < 2) errors.placeLabel = "invalid";
     if (LOCATION_TYPES.indexOf(value.locationType) < 0) errors.locationType = "invalid";
     if (!value.reason || value.reason.length < 2) errors.reason = "required";
     if (FREQUENCIES.indexOf(value.frequency) < 0) errors.frequency = "invalid";

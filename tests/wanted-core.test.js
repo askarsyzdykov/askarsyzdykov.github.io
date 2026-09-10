@@ -1,6 +1,7 @@
 const test=require("node:test"),assert=require("node:assert/strict"),core=require("../wanted/core.js");
 const valid={latitude:43.2389,longitude:76.8897,placeLabel:"Двор на Абая",locationType:"residential",reason:"Ближайшая зарядка всегда занята",frequency:"daily",chargerType:"ac",connectors:["Type 2"]};
 test("validates a complete proposal",()=>assert.equal(core.validateProposal(valid).valid,true));
+test("validates a proposal without placeLabel",()=>{const input={...valid};delete input.placeLabel;assert.equal(core.validateProposal(input).valid,true);});
 test("validates a proposal without a frequency answer",()=>{const input={...valid};delete input.frequency;assert.equal(core.validateProposal(input).valid,true);});
 test("keeps multiple optional connector selections",()=>assert.deepEqual(core.validateProposal({...valid,connectors:["GB/T","NACS"]}).value.connectors,["GB/T","NACS"]));
 test("rejects coordinates outside Kazakhstan",()=>assert.equal(core.validateProposal({...valid,latitude:12}).errors.coordinates,"invalid"));

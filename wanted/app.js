@@ -81,9 +81,43 @@
   }
 
   function pluralVotes(count) {
-    return (window.WantedCore && WantedCore.pluralVotes)
-      ? WantedCore.pluralVotes(count, lang)
-      : (count === 1 ? "голос" : "голосов");
+    if (window.WantedCore && WantedCore.pluralVotes) {
+      return WantedCore.pluralVotes(count, lang);
+    }
+    var l = (lang || "ru").slice(0, 2).toLowerCase();
+    var n = Math.abs(Number(count) || 0);
+    if (l === "kk" || l === "kz") return "дауыс";
+    if (l === "en") return n === 1 ? "vote" : "votes";
+    var mod10 = n % 10;
+    var mod100 = n % 100;
+    if (mod100 >= 11 && mod100 <= 14) return "голосов";
+    if (mod10 === 1) return "голос";
+    if (mod10 >= 2 && mod10 <= 4) return "голоса";
+    return "голосов";
+  }
+
+  function getProposalShareData(item) {
+    var votes = pluralVotes(item.votesCount);
+    var title = item.placeLabel + " — " + item.votesCount + " " + votes + " | evPoint.kz";
+    var text = item.placeLabel + " · " + item.votesCount + " " + votes + (item.reason ? ". " + item.reason : "");
+    var url = location.origin + "/wanted/" + encodeURIComponent(item.id);
+    return { title: title, text: text, url: url };
+  }
+
+  function shareProposal(item) {
+    track("wanted_share", { proposal_id: item.id });
+    var shareData = getProposalShareData(item);
+    if (navigator.share) {
+      navigator.share(shareData).catch(function () {});
+    } else if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(shareData.url).then(function () {
+        alert(t.shared);
+      }).catch(function () {
+        prompt(t.share, shareData.url);
+      });
+    } else {
+      prompt(t.share, shareData.url);
+    }
   }
 
   function esc(value) {
@@ -537,23 +571,7 @@
       if (shareBtn) {
         shareBtn.onclick = function (e) {
           e.preventDefault();
-          track("wanted_share", { proposal_id: item.id });
-          var url = location.origin + "/wanted/" + encodeURIComponent(item.id);
-          if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(url).then(function () {
-              alert(t.shared);
-            }).catch(function () {
-              if (navigator.share) {
-                navigator.share({ title: item.placeLabel, url: url }).catch(function () {});
-              } else {
-                alert(t.shared);
-              }
-            });
-          } else if (navigator.share) {
-            navigator.share({ title: item.placeLabel, url: url }).catch(function () {});
-          } else {
-            alert(t.shared);
-          }
+          shareProposal(item);
         };
       }
     }
@@ -738,7 +756,7 @@
       '</h2><p class="hint">' + t.placeHelp + '</p><div id="pick-map" class="pick-map"></div>' +
       '<button type="button" class="secondary locate" id="locate">⌖ ' + t.useLocation +
       '</button><label>' + t.address +
-      '<input name="placeLabel" maxlength="160" required placeholder="Алматы, улица…"></label></section>' +
+      '<input name="placeLabel" maxlength="160" placeholder="Алматы, улица…"></label></section>' +
       '<section class="wizard-step" data-step="2"><h2>' + t.locationStep +
       '</h2><div class="choices">' + Object.keys(t.locations).map(function (key, index) {
         return choice("locationType", key, t.locations[key], index === 0);
@@ -771,6 +789,78 @@
     var previous = document.getElementById("prev");
     var next = document.getElementById("next");
     var submit = document.getElementById("submit");
+    var geocoder = null;
+
+    function formatGeocodeAddress(result) {
+      if (!result) return "";
+      var components = result.address_components || [];
+      function get(type) {
+        for (var i = 0; i < components.length; i++) {
+          if (components[i].types && components[i].types.indexOf(type) !== -1) {
+            return components[i].long_name;
+          }
+        }
+        return "";
+      }
+
+      var route = get("route");
+      var streetNumber = get("street_number");
+      var neighborhood = get("neighborhood") || get("sublocality_level_1") || get("sublocality");
+      var premise = get("premise") || get("subpremise") || get("point_of_interest") || get("establishment");
+      var city = get("locality") || get("sublocality") || get("administrative_area_level_2") || get("administrative_area_level_1");
+
+      var street = "";
+      if (route) {
+        street = streetNumber ? (route + ", " + streetNumber) : route;
+      } else if (neighborhood) {
+        street = streetNumber ? (neighborhood + ", " + streetNumber) : neighborhood;
+      } else if (premise) {
+        street = premise;
+      }
+
+      if (city && street) {
+        if (street.indexOf(city) === -1) {
+          return city + ", " + street;
+        }
+        return street;
+      }
+      if (street) return street;
+      if (city) return city;
+
+      var formatted = result.formatted_address || "";
+      var country = get("country");
+      var postalCode = get("postal_code");
+
+      if (country) {
+        formatted = formatted.replace(new RegExp(",?\\s*" + country.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&") + "\\b", "gi"), "");
+      }
+      if (postalCode) {
+        formatted = formatted.replace(new RegExp("\\b" + postalCode + "\\b", "g"), "");
+      }
+      return formatted
+        .replace(/,?\s*(Казахстан|Kazakhstan|Қазақстан)\b/gi, "")
+        .replace(/\b\d{6}\b/g, "")
+        .replace(/\s+,/g, ",")
+        .replace(/,\s*,+/g, ",")
+        .replace(/^\s*,\s*|\s*,\s*$/g, "")
+        .trim();
+    }
+
+    function reverseGeocode(lat, lng) {
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+      if (typeof google === "undefined" || !google.maps || !google.maps.Geocoder) return;
+      if (!geocoder) {
+        geocoder = new google.maps.Geocoder();
+      }
+      geocoder.geocode({ location: { lat: lat, lng: lng } }, function (results, status) {
+        if (status === "OK" && results && results.length > 0) {
+          var formatted = formatGeocodeAddress(results[0]);
+          if (form && form.placeLabel && formatted) {
+            form.placeLabel.value = formatted;
+          }
+        }
+      });
+    }
 
     function updateUserLocation(userLat, userLng) {
       if (!Number.isFinite(userLat) || !Number.isFinite(userLng)) return;
@@ -799,6 +889,7 @@
             map.panTo(latLng);
             map.setZoom(16);
           }
+          reverseGeocode(userLat, userLng);
         }
       }, function () {
         if (button) button.classList.remove("is-loading");
@@ -815,13 +906,19 @@
       userMarker = createUserLocationMarker(map);
       marker = new google.maps.Marker(pinMarkerOptions({ lat: point.latitude, lng: point.longitude }, map, true));
 
+      if (valid && (!form.placeLabel.value || !form.placeLabel.value.trim())) {
+        reverseGeocode(point.latitude, point.longitude);
+      }
+
       marker.addListener("dragend", function (event) {
         point = { latitude: event.latLng.lat(), longitude: event.latLng.lng() };
+        reverseGeocode(point.latitude, point.longitude);
       });
 
       map.addListener("click", function (event) {
         point = { latitude: event.latLng.lat(), longitude: event.latLng.lng() };
         marker.setPosition(event.latLng);
+        reverseGeocode(point.latitude, point.longitude);
       });
 
       addLocationControl(map, function (btn) {
@@ -842,6 +939,7 @@
                 map.setCenter(userLatLng);
                 map.setZoom(16);
               }
+              reverseGeocode(userLat, userLng);
             }
           }
         }, function () {}, {
@@ -871,12 +969,6 @@
     }
 
     next.onclick = function () {
-      if (step === 1 && (!form.placeLabel.value.trim() || form.placeLabel.value.trim().length < 2)) {
-        errorBox.textContent = t.validation;
-        errorBox.hidden = false;
-        form.placeLabel.focus();
-        return;
-      }
       if (step === 3 && (!form.reason.value.trim() || form.reason.value.trim().length < 2)) {
         errorBox.textContent = t.validation;
         errorBox.hidden = false;
@@ -893,10 +985,11 @@
       event.preventDefault();
       var data = new FormData(form);
       var authorName = (session && session.user && (session.user.displayName || session.user.email)) || undefined;
+      var rawPlaceLabel = (data.get("placeLabel") || "").trim();
       var input = {
         latitude: point.latitude,
         longitude: point.longitude,
-        placeLabel: data.get("placeLabel"),
+        placeLabel: rawPlaceLabel || (t.locations[data.get("locationType")] || t.placeStep),
         locationType: data.get("locationType"),
         reason: data.get("reason"),
         frequency: "unspecified",
@@ -999,12 +1092,7 @@
       var shareBtn = document.getElementById("created-share-btn");
       if (shareBtn) {
         shareBtn.onclick = function () {
-          track("wanted_share", { proposal_id: item.id });
-          navigator.share({
-            title: item.placeLabel + " — evPoint.kz",
-            text: t.thankYouText,
-            url: shareUrl
-          }).catch(function () {});
+          shareProposal(item);
         };
       }
 
@@ -1177,12 +1265,12 @@
         });
       };
 
-      document.getElementById("share").onclick = function () {
-        track("wanted_share", { proposal_id: id });
-        var shareData = { title: document.title, text: description, url: location.href };
-        if (navigator.share) navigator.share(shareData).catch(function () {});
-        else navigator.clipboard.writeText(location.href).then(function () { alert(t.shared); });
-      };
+      var shareBtn = document.getElementById("share");
+      if (shareBtn) {
+        shareBtn.onclick = function () {
+          shareProposal(item);
+        };
+      }
 
       document.getElementById("install-app").onclick = function () {
         track("wanted_install_app", { proposal_id: id });
