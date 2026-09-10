@@ -66,26 +66,29 @@
   }
 
   function getProposalShareData(item) {
-    var votes = pluralVotes(item.votesCount);
-    var title = item.placeLabel + " — " + item.votesCount + " " + votes + " | evPoint.kz";
-    var text = item.placeLabel + " · " + item.votesCount + " " + votes + (item.reason ? ". " + item.reason : "");
+    var votesCount = (item && item.votesCount != null) ? item.votesCount : 0;
     var url = location.origin + "/wanted/" + encodeURIComponent(item.id);
+    var template = (t && t.shareTextTemplate) ||
+      "Предлагаю установить зарядную станцию для электромобилей в этом месте.\nУже проголосовали: {votes_count} чел.\nЕсли вам тоже нужна зарядка здесь — поддержите место своим голосом в evPoint:";
+    var text = template.replace("{votes_count}", votesCount);
+    var title = item.placeLabel ? (item.placeLabel + " | evPoint.kz") : "evPoint.kz";
     return { title: title, text: text, url: url };
   }
 
   function shareProposal(item) {
     track("wanted_share", { proposal_id: item.id });
     var shareData = getProposalShareData(item);
+    var fullText = shareData.text + "\n" + shareData.url;
     if (navigator.share) {
       navigator.share(shareData).catch(function () {});
     } else if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(shareData.url).then(function () {
+      navigator.clipboard.writeText(fullText).then(function () {
         alert(t.shared);
       }).catch(function () {
-        prompt(t.share, shareData.url);
+        prompt(t.share, fullText);
       });
     } else {
-      prompt(t.share, shareData.url);
+      prompt(t.share, fullText);
     }
   }
 
