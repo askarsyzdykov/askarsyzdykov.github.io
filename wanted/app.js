@@ -465,8 +465,8 @@
 
     bindLanguages();
     track("wanted_map_open");
-    document.getElementById("propose").onclick = function (event) {
-      event.preventDefault();
+    function handlePropose(event) {
+      if (event) event.preventDefault();
       track("wanted_create_start");
       WantedApi.session().then(function (session) {
         if (session && session.user) {
@@ -481,7 +481,20 @@
           navigate("/wanted/new");
         });
       });
-    };
+    }
+
+    var proposeBtn = document.getElementById("propose");
+    if (proposeBtn) proposeBtn.onclick = handlePropose;
+
+    var resultsEl = document.getElementById("results");
+    if (resultsEl) {
+      resultsEl.addEventListener("click", function (event) {
+        var btn = event.target.closest(".empty-add-btn");
+        if (btn) {
+          handlePropose(event);
+        }
+      });
+    }
 
     var sheet = document.getElementById("marker-sheet");
     var sheetContent = document.getElementById("marker-sheet-content");
@@ -631,7 +644,7 @@
 
       document.getElementById("results").innerHTML = items.length
         ? items.slice().sort(function (a, b) { return b.votesCount - a.votesCount; }).slice(0, 8).map(card).join("")
-        : '<div class="empty"><span>＋</span><p>' + t.empty + "</p></div>";
+        : '<div class="empty"><button type="button" class="empty-add-btn" aria-label="' + esc(t.propose) + '">＋</button><p>' + esc(t.empty) + "</p></div>";
     }
 
     function boundsForRequest() {
@@ -768,7 +781,7 @@
         return choice("chargerType", key, t.chargers[key], index === 2);
       }).join("") + '</div><fieldset class="connector-field"><legend>' + t.connectors +
       '</legend><div class="choices connector-choices">' +
-      ["GB/T", "CCS2", "CHAdeMO", "NACS"].map(function (name) {
+      ["GB/T", "CCS 2 (Type 2)", "CHAdeMO", "NACS"].map(function (name) {
         return multiChoice("connectors", name, name);
       }).join("") + '</div></fieldset><label>' + t.comment +
       '<textarea name="authorComment" maxlength="500"></textarea></label></section>' +
