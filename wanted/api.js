@@ -159,7 +159,7 @@
   }
 
   function nearby(point) {
-    return request("/nearby?lat=" + encodeURIComponent(point.latitude) + "&lng=" + encodeURIComponent(point.longitude) + "&radius=300");
+    return request("/nearby?lat=" + encodeURIComponent(point.location.latitude) + "&lng=" + encodeURIComponent(point.location.longitude) + "&radius=300");
   }
 
   function create(input) {

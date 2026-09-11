@@ -232,7 +232,7 @@
 
     return {
       map: map,
-      position: { lat: item.latitude, lng: item.longitude },
+      position: { lat: item.location.latitude, lng: item.location.longitude },
       title: item.placeLabel || t.placeStep,
       icon: {
         url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(markerSvg),
@@ -733,7 +733,7 @@
     var lng = Number(params.get("lng"));
     var valid = Number.isFinite(lat) && Number.isFinite(lng) &&
       WantedCore.validateProposal({
-        latitude: lat, longitude: lng, placeLabel: "x", locationType: "other",
+        location: { latitude: lat, longitude: lng }, placeLabel: "x", locationType: "other",
         reason: "123456789012", frequency: "daily", chargerType: "unknown"
       }).errors.coordinates === undefined;
 
@@ -982,8 +982,10 @@
       var authorName = (session && session.user && (session.user.displayName || session.user.email)) || undefined;
       var rawPlaceLabel = (data.get("placeLabel") || "").trim();
       var input = {
-        latitude: point.latitude,
-        longitude: point.longitude,
+        location: {
+          latitude: point.latitude,
+          longitude: point.longitude
+        },
         placeLabel: rawPlaceLabel || (t.locations[data.get("locationType")] || t.placeStep),
         locationType: data.get("locationType"),
         reason: data.get("reason"),
@@ -1002,8 +1004,8 @@
         return;
       }
       if (checked.value.locationType === "residential") {
-        checked.value.latitude = Number(checked.value.latitude.toFixed(4));
-        checked.value.longitude = Number(checked.value.longitude.toFixed(4));
+        checked.value.location.latitude = Number(checked.value.location.latitude.toFixed(4));
+        checked.value.location.longitude = Number(checked.value.location.longitude.toFixed(4));
       }
 
       submit.disabled = true;
@@ -1124,8 +1126,8 @@
         return;
       }
 
-      if (!loadSavedMapState() && Number.isFinite(item.latitude) && Number.isFinite(item.longitude)) {
-        saveMapState(item.latitude, item.longitude, 14);
+      if (!loadSavedMapState() && item.location && Number.isFinite(item.location.latitude) && Number.isFinite(item.location.longitude)) {
+        saveMapState(item.location.latitude, item.location.longitude, 14);
       }
 
       var isAuthor = checkIsAuthor(item);
@@ -1226,8 +1228,8 @@
         }
       }).catch(function () {});
 
-      createMap("detail-map", [item.latitude, item.longitude], 15, function (map) {
-        new google.maps.Marker(pinMarkerOptions({ lat: item.latitude, lng: item.longitude }, map, false));
+      createMap("detail-map", [item.location.latitude, item.location.longitude], 15, function (map) {
+        new google.maps.Marker(pinMarkerOptions({ lat: item.location.latitude, lng: item.location.longitude }, map, false));
       });
 
       var vote = document.getElementById("vote");

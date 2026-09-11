@@ -13,8 +13,11 @@
   function clean(value, max) { return String(value == null ? "" : value).replace(/[\u0000-\u001f<>]/g, " ").replace(/\s+/g, " ").trim().slice(0, max); }
   function validCoordinate(lat, lng) { return lat >= 40.5 && lat <= 55.5 && lng >= 46 && lng <= 88.5; }
   function validateProposal(input) {
+    var location = input.location || {};
     var value = {
-      latitude: asNumber(input.latitude), longitude: asNumber(input.longitude),
+      location: {
+        latitude: asNumber(location.latitude), longitude: asNumber(location.longitude)
+      },
       placeLabel: clean(input.placeLabel, 160), locationType: clean(input.locationType, 30),
       reason: clean(input.reason, 500), frequency: clean(input.frequency || "unspecified", 30),
       chargerType: clean(input.chargerType, 20), connectors: Array.isArray(input.connectors) ? input.connectors.map(function (x) { return clean(x, 24); }).filter(Boolean).slice(0, 8) : [],
@@ -22,7 +25,7 @@
       authorName: clean(input.authorName, 120)
     };
     var errors = {};
-    if (value.latitude === null || value.longitude === null || !validCoordinate(value.latitude, value.longitude)) errors.coordinates = "invalid";
+    if (value.location.latitude === null || value.location.longitude === null || !validCoordinate(value.location.latitude, value.location.longitude)) errors.coordinates = "invalid";
     if (value.placeLabel && value.placeLabel.length < 2) errors.placeLabel = "invalid";
     if (LOCATION_TYPES.indexOf(value.locationType) < 0) errors.locationType = "invalid";
     if (!value.reason || value.reason.length < 2) errors.reason = "required";
@@ -31,13 +34,13 @@
     return { valid: Object.keys(errors).length === 0, errors: errors, value: value };
   }
   function distanceMeters(a, b) {
-    var rad = Math.PI / 180, p1 = a.latitude * rad, p2 = b.latitude * rad;
-    var dp = (b.latitude - a.latitude) * rad, dl = (b.longitude - a.longitude) * rad;
+    var rad = Math.PI / 180, p1 = a.location.latitude * rad, p2 = b.location.latitude * rad;
+    var dp = (b.location.latitude - a.location.latitude) * rad, dl = (b.location.longitude - a.location.longitude) * rad;
     var h = Math.sin(dp / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) ** 2;
     return 12742000 * Math.asin(Math.sqrt(h));
   }
   function nearby(items, point, radius) { return items.filter(function (item) { return !["archived", "rejected"].includes(item.status) && distanceMeters(item, point) <= (radius || 300); }).sort(function (a, b) { return distanceMeters(a, point) - distanceMeters(b, point); }); }
-  function inBounds(item, bounds) { return !bounds || (item.latitude >= bounds.south && item.latitude <= bounds.north && item.longitude >= bounds.west && item.longitude <= bounds.east); }
+  function inBounds(item, bounds) { return !bounds || (item.location.latitude >= bounds.south && item.location.latitude <= bounds.north && item.location.longitude >= bounds.west && item.location.longitude <= bounds.east); }
   function matches(item, filters) { return (!filters.status || item.status === filters.status) && (!filters.locationType || item.locationType === filters.locationType) && (!filters.chargerType || item.chargerType === filters.chargerType); }
   function pluralVotes(count, lang) {
     var l = (lang || "ru").slice(0, 2).toLowerCase();
