@@ -1434,7 +1434,6 @@
     root.innerHTML = '<main class="page my-page">' + header(true) +
       '<div class="my-intro">' +
       '<div class="my-intro-text">' +
-      '<p class="eyebrow">' + esc(t.driver || "Водитель") + '</p>' +
       '<h1>' + esc(t.myProposals || "Мои предложения") + '</h1>' +
       '</div>' +
       '<div class="my-sort-bar">' +
@@ -1502,9 +1501,8 @@
           '<div class="my-card-actions">' +
           '<button type="button" class="secondary share-btn my-share-btn" data-share-id="' + esc(item.id) + '" aria-label="' + esc(t.share) + '" title="' + esc(t.share) + '">' +
           shareSvg +
-          '<span>' + esc(t.share) + '</span>' +
           '</button>' +
-          '<a href="/wanted/' + encodeURIComponent(item.id) + '" class="primary my-open-btn">' + esc(t.open || "Открыть") + ' →</a>' +
+          '<a href="/wanted/' + encodeURIComponent(item.id) + '" class="primary my-open-btn">' + esc(t.open || "Открыть") + '</a>' +
           '</div>' +
           '</div>' +
           '</article>';
