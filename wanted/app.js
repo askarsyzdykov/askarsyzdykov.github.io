@@ -41,8 +41,18 @@
 
   var currentSessionUser = null;
   WantedApi.session().then(function (session) {
-    if (session && session.user) currentSessionUser = session.user;
+    if (session && session.user) {
+      currentSessionUser = session.user;
+      updateHeaderAuth();
+    }
   }).catch(function () {});
+
+  if (typeof WantedApi.onAuthStateChanged === "function") {
+    WantedApi.onAuthStateChanged(function (user) {
+      currentSessionUser = user;
+      updateHeaderAuth();
+    });
+  }
 
   function checkIsAuthor(item) {
     if (!item) return false;
@@ -103,8 +113,58 @@
   }
 
   function languages() {
-    return '<div class="languages" aria-label="Language">' +
-      '<button data-lang="kk">ҚАЗ</button><button data-lang="ru">РУС</button><button data-lang="en">ENG</button></div>';
+    var chevronSvg = '<svg class="lang-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+    return '<div class="lang-select-wrap" aria-label="Language">' +
+      '<select class="lang-select" id="lang-select" aria-label="Language">' +
+      '<option value="kk"' + (lang === "kk" ? " selected" : "") + '>ҚАЗ</option>' +
+      '<option value="ru"' + (lang === "ru" ? " selected" : "") + '>РУС</option>' +
+      '<option value="en"' + (lang === "en" ? " selected" : "") + '>ENG</option>' +
+      '</select>' +
+      chevronSvg +
+      '</div>';
+  }
+
+  function renderUserAvatar(user) {
+    var name = (user && (user.displayName || user.email)) || t.driver || "Водитель";
+    if (user && user.photoURL) {
+      return '<img class="user-avatar" src="' + esc(user.photoURL) + '" alt="' + esc(name) + '" referrerpolicy="no-referrer">';
+    }
+    var initial = (name.trim().charAt(0) || "U").toUpperCase();
+    return '<span class="user-avatar-placeholder" aria-hidden="true">' + esc(initial) + '</span>';
+  }
+
+  function authControl(user) {
+    if (!user) {
+      return '<button type="button" class="topbar-auth-btn" id="topbar-login-btn">' +
+        '<svg class="auth-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>' +
+        '<span>' + esc(t.signIn || "Войти") + '</span>' +
+        '</button>';
+    }
+    var name = user.displayName || user.email || t.driver || "Водитель";
+    var chevronSvg = '<svg class="user-menu-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+    var logoutSvg = '<svg class="logout-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>';
+
+    return '<div class="user-menu" id="user-menu">' +
+      '<button type="button" class="user-menu-btn" id="user-menu-btn" aria-haspopup="true" aria-expanded="false" title="' + esc(name) + '">' +
+      renderUserAvatar(user) +
+      '<span class="user-display-name">' + esc(name) + '</span>' +
+      chevronSvg +
+      '</button>' +
+      '<div class="user-dropdown" id="user-dropdown" hidden>' +
+      '<div class="user-dropdown-info">' +
+      '<strong class="user-dropdown-name">' + esc(name) + '</strong>' +
+      (user.email && user.email !== name ? '<span class="user-dropdown-email">' + esc(user.email) + '</span>' : '') +
+      '</div>' +
+      '<a href="/wanted/my" class="user-dropdown-item" id="user-my-proposals-link">' +
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>' +
+      '<span>' + esc(t.myProposals || "Мои предложения") + '</span>' +
+      '</a>' +
+      '<button type="button" class="user-dropdown-logout" id="user-logout-btn">' +
+      logoutSvg +
+      '<span>' + esc(t.signOut || "Выйти") + '</span>' +
+      '</button>' +
+      '</div>' +
+      '</div>';
   }
 
   function header(back) {
@@ -112,19 +172,88 @@
       ? '<a class="back-link" href="/wanted/">← ' + t.back + "</a>"
       : '<a class="brand" href="/"><img class="brand-logo" src="/images/evpoint_logo.svg" alt="evPoint.kz" width="32" height="32">evPoint.kz</a>';
     return '<header class="topbar">' + left + '<div class="top-actions">' +
-      languages() + "</div></header>";
+      languages() +
+      '<div id="topbar-auth" class="topbar-auth">' + authControl(currentSessionUser) + '</div>' +
+      "</div></header>";
+  }
+
+  function updateHeaderAuth() {
+    var container = document.getElementById("topbar-auth");
+    if (container) {
+      container.innerHTML = authControl(currentSessionUser);
+      bindHeaderAuth();
+    }
   }
 
   function bindLanguages() {
-    root.querySelectorAll("[data-lang]").forEach(function (button) {
-      if (button.dataset.lang === lang) button.classList.add("active");
-      button.onclick = function () {
-        localStorage.setItem("evpoint-lang", button.dataset.lang);
+    var select = document.getElementById("lang-select");
+    if (select) {
+      select.value = lang;
+      select.onchange = function () {
+        var newLang = select.value;
+        localStorage.setItem("evpoint-lang", newLang);
         var url = new URL(location.href);
-        url.searchParams.set("lang", button.dataset.lang);
+        url.searchParams.set("lang", newLang);
         location.href = url;
       };
-    });
+    }
+  }
+
+  function bindHeaderAuth() {
+    var loginBtn = document.getElementById("topbar-login-btn");
+    if (loginBtn) {
+      loginBtn.onclick = function (e) {
+        e.preventDefault();
+        openAuthSheet(function (session) {
+          if (session && session.user) {
+            currentSessionUser = session.user;
+            updateHeaderAuth();
+          }
+        });
+      };
+    }
+
+    var userMenuBtn = document.getElementById("user-menu-btn");
+    var userDropdown = document.getElementById("user-dropdown");
+    var userLogoutBtn = document.getElementById("user-logout-btn");
+    var userMyProposalsLink = document.getElementById("user-my-proposals-link");
+    if (userMyProposalsLink && userDropdown) {
+      userMyProposalsLink.onclick = function () {
+        userDropdown.hidden = true;
+      };
+    }
+    if (userMenuBtn && userDropdown) {
+      userMenuBtn.onclick = function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var isOpen = !userDropdown.hidden;
+        userDropdown.hidden = isOpen;
+        userMenuBtn.setAttribute("aria-expanded", String(!isOpen));
+        userMenuBtn.classList.toggle("is-active", !isOpen);
+      };
+    }
+    if (userLogoutBtn) {
+      userLogoutBtn.onclick = function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (userDropdown) userDropdown.hidden = true;
+        WantedApi.signOut().then(function () {
+          currentSessionUser = null;
+          updateHeaderAuth();
+          var path = location.pathname.replace(/\/+$/, "");
+          if (path === "/wanted/new" || path === "/wanted/my") {
+            navigate("/wanted/");
+          }
+        }).catch(function (err) {
+          console.warn("Sign out error:", err);
+        });
+      };
+    }
+  }
+
+  function bindHeader() {
+    bindLanguages();
+    bindHeaderAuth();
   }
 
   function option(value, label) {
@@ -374,6 +503,10 @@
       var promise = provider === "apple" ? WantedApi.signInWithApple() : WantedApi.signInWithGoogle();
       promise.then(function (session) {
         close(false);
+        if (session && session.user) {
+          currentSessionUser = session.user;
+          updateHeaderAuth();
+        }
         if (typeof onSuccess === "function") onSuccess(session);
       }).catch(function (error) {
         if (errorBox) {
@@ -435,7 +568,7 @@
       '<button class="sheet-close" type="button" aria-label="' + t.close + '">' + closeSvg + '</button>' +
       '<div id="marker-sheet-content"></div></div></section></main>';
 
-    bindLanguages();
+    bindHeader();
     track("wanted_map_open");
     function handlePropose(event) {
       if (event) event.preventDefault();
@@ -777,7 +910,7 @@
       '</button><button id="support-duplicate" class="primary">' + t.duplicateSupport +
       "</button></div></div></dialog></main>";
 
-    bindLanguages();
+    bindHeader();
 
     var form = document.getElementById("proposal-form");
     var errorBox = document.getElementById("error-box");
@@ -1117,7 +1250,7 @@
   function renderDetail(id) {
     root.innerHTML = '<main class="page detail-page">' + header(true) +
       '<div class="page-loader" role="status" aria-live="polite"><div class="loader-spinner" aria-hidden="true"></div><p class="loader-text">' + esc(t.detailLoading) + '</p></div></main>';
-    bindLanguages();
+    bindHeader();
 
     WantedApi.get(id).then(function (item) {
       if (!item) {
@@ -1143,7 +1276,7 @@
       var authorName = item.authorName || t.driver || (lang === "kk" ? "Жүргізуші" : (lang === "en" ? "Driver" : "Водитель"));
       var authorSvg = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
       var authorHtml = '<span class="author-tag">' + authorSvg + '<span>' + esc(authorName) + '</span></span>';
-      var shareSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>';
+      var shareSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>';
 
       var preferredParts = [];
       if (item.chargerType && item.chargerType !== "unknown") {
@@ -1188,7 +1321,7 @@
         '" required></textarea></label><button class="primary">' + t.send +
         "</button></form></section></main>";
 
-      bindLanguages();
+      bindHeader();
 
       function updateVoteButtonState(hasVoted, forceAuthor) {
         var isAuth = forceAuthor !== undefined ? Boolean(forceAuthor) : checkIsAuthor(item);
@@ -1291,6 +1424,121 @@
     });
   }
 
+  function renderMy(session) {
+    track("wanted_my_open");
+    var sortMode = "date_desc";
+    var userItems = [];
+
+    var chevronSvg = '<svg class="sort-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+
+    root.innerHTML = '<main class="page my-page">' + header(true) +
+      '<div class="my-intro">' +
+      '<div class="my-intro-text">' +
+      '<p class="eyebrow">' + esc(t.driver || "Водитель") + '</p>' +
+      '<h1>' + esc(t.myProposals || "Мои предложения") + '</h1>' +
+      '</div>' +
+      '<div class="my-sort-bar">' +
+      '<label class="my-sort-label" for="my-sort-select">' +
+      '<span>' + esc(t.sortBy || "Сортировка") + ':</span>' +
+      '<div class="my-sort-select-wrap">' +
+      '<select id="my-sort-select" class="my-sort-select">' +
+      '<option value="date_desc">' + esc(t.newestFirst || "Сначала новые") + '</option>' +
+      '<option value="date_asc">' + esc(t.oldestFirst || "Сначала старые") + '</option>' +
+      '<option value="votes_desc">' + esc(t.mostVotes || "Больше голосов") + '</option>' +
+      '</select>' +
+      chevronSvg +
+      '</div>' +
+      '</label>' +
+      '</div>' +
+      '</div>' +
+      '<div id="my-proposals-content" class="my-proposals-container">' +
+      '<div class="page-loader" role="status" aria-live="polite"><div class="loader-spinner" aria-hidden="true"></div><p class="loader-text">' + esc(t.loading || "Загружаем предложения…") + '</p></div>' +
+      '</div>' +
+      '</main>';
+
+    bindHeader();
+
+    function renderCards() {
+      var container = document.getElementById("my-proposals-content");
+      if (!container) return;
+
+      if (!userItems.length) {
+        container.innerHTML = '<div class="my-empty-state">' +
+          '<div class="empty-icon-wrap"><span class="empty-emoji">📍</span></div>' +
+          '<h2>' + esc(t.noMyProposals || "У вас пока нет предложений") + '</h2>' +
+          '<p class="hint">' + esc(t.subtitle || "Покажите операторам, где вам не хватает зарядных станций") + '</p>' +
+          '<a href="/wanted/new" class="primary cta">' + esc(t.propose || "Предложить место") + '</a>' +
+          '</div>';
+        return;
+      }
+
+      var sorted = userItems.slice().sort(function (a, b) {
+        if (sortMode === "votes_desc") {
+          return (b.votesCount || 0) - (a.votesCount || 0);
+        } else if (sortMode === "date_asc") {
+          return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
+        } else {
+          return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+        }
+      });
+
+      var shareSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>';
+
+      container.innerHTML = '<div class="my-proposals-grid">' + sorted.map(function (item) {
+        var chargerLabel = (item.chargerType && item.chargerType !== "unknown" && (t.chargers[item.chargerType] || item.chargerType)) ? (t.chargers[item.chargerType] || item.chargerType) : "";
+        var placeInfo = esc(t.locations[item.locationType] || item.locationType) + (chargerLabel ? " · " + esc(chargerLabel) : "");
+        var dateStr = item.createdAt ? new Intl.DateTimeFormat(lang, { dateStyle: "medium" }).format(new Date(item.createdAt)) : "";
+
+        return '<article class="proposal-card my-proposal-card">' +
+          '<div class="card-top">' +
+          statusPill(item.status) +
+          '<span class="my-card-date">' + esc(dateStr) + '</span>' +
+          '</div>' +
+          '<h3><a href="/wanted/' + encodeURIComponent(item.id) + '">' + esc(item.placeLabel) + '</a></h3>' +
+          '<p class="my-card-reason">' + esc(item.reason) + '</p>' +
+          '<p class="my-card-info">' + placeInfo + '</p>' +
+          '<div class="my-card-bottom">' +
+          '<div class="my-card-votes"><strong>' + item.votesCount + '</strong> <span>' + esc(pluralVotes(item.votesCount)) + '</span></div>' +
+          '<div class="my-card-actions">' +
+          '<button type="button" class="secondary share-btn my-share-btn" data-share-id="' + esc(item.id) + '" aria-label="' + esc(t.share) + '" title="' + esc(t.share) + '">' +
+          shareSvg +
+          '<span>' + esc(t.share) + '</span>' +
+          '</button>' +
+          '<a href="/wanted/' + encodeURIComponent(item.id) + '" class="primary my-open-btn">' + esc(t.open || "Открыть") + ' →</a>' +
+          '</div>' +
+          '</div>' +
+          '</article>';
+      }).join("") + '</div>';
+
+      container.querySelectorAll(".my-share-btn").forEach(function (btn) {
+        btn.onclick = function (e) {
+          e.preventDefault();
+          var id = btn.dataset.shareId;
+          var item = userItems.find(function (x) { return x.id === id; });
+          if (item) shareProposal(item);
+        };
+      });
+    }
+
+    var sortSelect = document.getElementById("my-sort-select");
+    if (sortSelect) {
+      sortSelect.onchange = function () {
+        sortMode = sortSelect.value;
+        renderCards();
+      };
+    }
+
+    WantedApi.myProposals().then(function (res) {
+      userItems = (res && res.items) || [];
+      renderCards();
+    }).catch(function () {
+      var container = document.getElementById("my-proposals-content");
+      if (container) {
+        container.innerHTML = '<p class="error-box">' + esc(t.loadError) + '</p>';
+      }
+    });
+  }
+
   function navigate(url, replace) {
     var fullUrl = typeof url === "string" ? new URL(url, location.origin) : url;
     var target = fullUrl.pathname + fullUrl.search + fullUrl.hash;
@@ -1309,6 +1557,9 @@
     if (path === "/wanted/new") {
       document.title = (t.newTitle || "Предложить место") + " | evPoint.kz";
       authGate(renderNew);
+    } else if (path === "/wanted/my") {
+      document.title = (t.myProposals || "Мои предложения") + " | evPoint.kz";
+      authGate(renderMy);
     } else if (path === "/wanted" || path === "") {
       document.title = (t.title || "Где нужна зарядка") + " | evPoint.kz";
       renderList();
@@ -1319,6 +1570,35 @@
       renderList();
     }
   }
+
+  document.addEventListener("click", function (event) {
+    var userDropdown = document.getElementById("user-dropdown");
+    var userMenu = document.getElementById("user-menu");
+    if (userDropdown && !userDropdown.hidden) {
+      if (!userMenu || !userMenu.contains(event.target)) {
+        userDropdown.hidden = true;
+        var btn = document.getElementById("user-menu-btn");
+        if (btn) {
+          btn.setAttribute("aria-expanded", "false");
+          btn.classList.remove("is-active");
+        }
+      }
+    }
+  });
+
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") {
+      var userDropdown = document.getElementById("user-dropdown");
+      if (userDropdown && !userDropdown.hidden) {
+        userDropdown.hidden = true;
+        var btn = document.getElementById("user-menu-btn");
+        if (btn) {
+          btn.setAttribute("aria-expanded", "false");
+          btn.classList.remove("is-active");
+        }
+      }
+    }
+  });
 
   window.addEventListener("popstate", function () {
     route();

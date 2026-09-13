@@ -25,3 +25,19 @@ test("pluralizes votes correctly in Kazakh and English",()=>{
   assert.equal(core.pluralVotes(1,"en"),"vote");
   assert.equal(core.pluralVotes(2,"en"),"votes");
 });
+test("has required auth translations in all supported languages",()=>{
+  const fs=require("node:fs");
+  const vm=require("node:vm");
+  const code=fs.readFileSync(require.resolve("../wanted/i18n.js"),"utf8");
+  const sandbox={window:{}};
+  vm.createContext(sandbox);
+  vm.runInContext(code,sandbox);
+  const msgs=sandbox.window.WANTED_MESSAGES;
+  assert.ok(msgs.ru && msgs.kk && msgs.en);
+  assert.equal(msgs.ru.signIn,"Войти");
+  assert.equal(msgs.ru.signOut,"Выйти");
+  assert.equal(msgs.kk.signIn,"Кіру");
+  assert.equal(msgs.kk.signOut,"Шығу");
+  assert.equal(msgs.en.signIn,"Sign in");
+  assert.equal(msgs.en.signOut,"Sign out");
+});

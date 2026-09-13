@@ -134,6 +134,16 @@
     return auth ? auth.signOut() : Promise.resolve();
   }
 
+  function onAuthStateChanged(callback) {
+    var auth = getFirebaseAuth();
+    if (!auth) return function () {};
+    return auth.onAuthStateChanged(function (fbUser) {
+      if (typeof callback === "function") {
+        callback(formatUser(fbUser));
+      }
+    });
+  }
+
   function list(bounds, filters) {
     var params = new URLSearchParams();
     if (bounds) {
@@ -197,13 +207,28 @@
     });
   }
 
+  function myProposals() {
+    return request("/my/proposals").catch(function () {
+      return list(null, {}).then(function (res) {
+        var items = (res && res.items) || [];
+        var filtered = items.filter(function (x) {
+          return Boolean(x.isAuthor);
+        });
+        return { items: filtered };
+      });
+    });
+  }
+
   window.WantedApi = {
     session: session,
     signIn: signIn,
     signInWithGoogle: signInWithGoogle,
     signInWithApple: signInWithApple,
     signOut: signOut,
+    onAuthStateChanged: onAuthStateChanged,
+    formatUser: formatUser,
     list: list,
+    myProposals: myProposals,
     get: get,
     getVote: getVote,
     nearby: nearby,
