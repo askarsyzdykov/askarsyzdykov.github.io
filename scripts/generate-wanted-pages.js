@@ -25,7 +25,7 @@ const statusLabels = {
 
 for (const item of JSON.parse(fs.readFileSync(input, "utf8"))) {
   const title = `${item.placeLabel} — ${item.votesCount} ${core.pluralVotes(item.votesCount, "ru")} | evPoint.kz`;
-  const description = `${statusLabels[item.status] || "Предложение"}. ${item.reason}`;
+  const description = `${statusLabels[item.status] || "Предложение"}. ${item.reason || item.description || ""}`;
   const url = `https://evpoint.kz/wanted/${encodeURIComponent(item.id)}`;
   const html = `<!doctype html>
 <html lang="ru">

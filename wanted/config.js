@@ -10,7 +10,7 @@
 //    - В Authentication -> Sign-in method включите провайдеры Google и Apple.
 //    - В Authentication -> Settings -> Authorized domains добавьте "evpoint.kz" и "localhost".
 window.EVPOINT_WANTED_CONFIG = {
-  apiUrl: "https://api.evpoint.kz/api/wanted",
+  apiUrl: "http://127.0.0.1:5001/kz-ev-chargers-map/us-central1/api/api/wanted",
   googleMapsApiKey: "AIzaSyCt06zxcHM71DegSMhNVI227jprZRRv43A",
   firebase: {
     apiKey: "AIzaSyBC1h-q5xWcOw87cRVqZCGP3Cto5yDREQ0",

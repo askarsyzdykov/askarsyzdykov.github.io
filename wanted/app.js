@@ -78,15 +78,48 @@
   function getProposalShareData(item) {
     var votesCount = (item && item.votesCount != null) ? item.votesCount : 0;
     var url = location.origin + "/wanted/" + encodeURIComponent(item.id);
-    var template = (t && t.shareTextTemplate) ||
-      "Предлагаю установить зарядную станцию для электромобилей в этом месте.\nУже проголосовали: {votes_count} чел.\nЕсли вам тоже нужна зарядка здесь — поддержите место своим голосом в evPoint:";
+    var isSite = item && item.sourceType === "site_offer";
+    var template = isSite
+      ? ((t && t.shareSiteTextTemplate) || "Здесь предлагают установить зарядную станцию для электромобилей.\nЕсли вам тоже нужна зарядка в этом месте — поддержите локацию своим голосом в evPoint.\nУже проголосовали: {votes_count} чел.")
+      : ((t && t.shareTextTemplate) || "Предлагаю установить зарядную станцию для электромобилей в этом месте.\nУже проголосовали: {votes_count} чел.\nЕсли вам тоже нужна зарядка здесь — поддержите место своим голосом в evPoint:");
     var text = template.replace("{votes_count}", votesCount);
-    var title = item.placeLabel ? (item.placeLabel + " | evPoint.kz") : "evPoint.kz";
+    var label = (isSite && item.siteName) ? (item.siteName + " (" + (item.placeLabel || "") + ")") : item.placeLabel;
+    var title = label ? (label + " | evPoint.kz") : "evPoint.kz";
     return { title: title, text: text, url: url };
   }
 
+  function sanitizeAnalyticsData(data) {
+    data = data || {};
+    var sanitized = {};
+    var allowedKeys = ["proposal_id", "sourceType", "locationType", "powerStatus", "preferredChargerType", "count"];
+    for (var key in data) {
+      if (allowedKeys.indexOf(key) >= 0 && data[key] !== undefined) {
+        sanitized[key] = data[key];
+      }
+    }
+    return sanitized;
+  }
+
+  function track(name, data) {
+    if (typeof window.gtag === "function") {
+      window.gtag("event", name, sanitizeAnalyticsData(data));
+    }
+  }
+
+  function esc(value) {
+    return String(value == null ? "" : value).replace(/[&<>"']/g, function (char) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char];
+    });
+  }
+
   function shareProposal(item) {
-    track("wanted_share", { proposal_id: item.id });
+    track("wanted_share", {
+      proposal_id: item.id,
+      sourceType: item.sourceType || "driver_demand",
+      locationType: item.locationType,
+      powerStatus: item.powerStatus,
+      preferredChargerType: item.preferredChargerType
+    });
     var shareData = getProposalShareData(item);
     var fullText = shareData.text + "\n" + shareData.url;
     if (navigator.share) {
@@ -100,16 +133,6 @@
     } else {
       prompt(t.share, fullText);
     }
-  }
-
-  function esc(value) {
-    return String(value == null ? "" : value).replace(/[&<>"']/g, function (char) {
-      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char];
-    });
-  }
-
-  function track(name, data) {
-    if (typeof window.gtag === "function") window.gtag("event", name, data || {});
   }
 
   function languages() {
@@ -256,18 +279,21 @@
     bindHeaderAuth();
   }
 
-  function option(value, label) {
-    return '<option value="' + value + '">' + label + "</option>";
-  }
-
   function choice(name, value, label, selected) {
     return '<label class="choice"><input type="radio" name="' + name + '" value="' + value + '" ' +
       (selected ? "checked" : "") + "><span>" + label + "</span></label>";
   }
 
-  function multiChoice(name, value, label) {
+  function multiChoice(name, value, label, checked) {
     return '<label class="choice"><input type="checkbox" name="' + name + '" value="' + value +
-      '"><span>' + label + "</span></label>";
+      '" ' + (checked ? "checked" : "") + '><span>' + label + "</span></label>";
+  }
+
+  function sourceBadge(sourceType) {
+    var isSite = sourceType === "site_offer";
+    return '<span class="source-badge ' + (isSite ? 'source-badge-site' : 'source-badge-driver') + '">' +
+      esc(isSite ? (t.badgeSiteOffer || "Площадка от бизнеса") : (t.badgeDriverDemand || "Нужна зарядка")) +
+      '</span>';
   }
 
   function loadGoogleMaps() {
@@ -316,6 +342,7 @@
 
   function createMap(id, center, zoom, ready) {
     var element = document.getElementById(id);
+    if (!element) return;
     element.innerHTML = '<div class="map-loading">' + t.loading + "</div>";
 
     loadGoogleMaps().then(function () {
@@ -355,14 +382,21 @@
   }
 
   function markerOptions(item, map) {
-    var markerSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44">' +
-      '<circle cx="22" cy="22" r="10" fill="#EA6035" stroke="#ffffff" stroke-width="3"/>' +
-      "</svg>";
+    var isSite = item && item.sourceType === "site_offer";
+    var markerSvg = isSite
+      ? '<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44">' +
+        '<circle cx="22" cy="22" r="11" fill="#007aff" stroke="#ffffff" stroke-width="3"/>' +
+        '<rect x="18" y="17" width="8" height="10" rx="1.5" fill="#ffffff"/>' +
+        '</svg>'
+      : '<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44">' +
+        '<circle cx="22" cy="22" r="10" fill="#EA6035" stroke="#ffffff" stroke-width="3"/>' +
+        '</svg>';
 
+    var title = (isSite && item.siteName) ? (item.siteName + " · " + (item.placeLabel || "")) : (item.placeLabel || t.placeStep);
     return {
       map: map,
       position: { lat: item.location.latitude, lng: item.location.longitude },
-      title: item.placeLabel || t.placeStep,
+      title: title,
       icon: {
         url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(markerSvg),
         scaledSize: new google.maps.Size(44, 44),
@@ -410,28 +444,49 @@
   }
 
   function card(item) {
-    var chargerLabel = (item.chargerType && item.chargerType !== "unknown" && (t.chargers[item.chargerType] || item.chargerType)) ? (t.chargers[item.chargerType] || item.chargerType) : "";
-    var placeInfo = esc(t.locations[item.locationType] || item.locationType) + (chargerLabel ? " · " + esc(chargerLabel) : "");
-    return '<article class="proposal-card"><div class="card-top">' + statusPill(item.status) +
+    var isSite = item.sourceType === "site_offer";
+    var title = isSite ? (item.siteName || item.placeLabel) : item.placeLabel;
+    var chargerLabel = (!isSite && item.chargerType && item.chargerType !== "unknown" && (t.chargers[item.chargerType] || item.chargerType))
+      ? (t.chargers[item.chargerType] || item.chargerType)
+      : "";
+    var placeInfo = isSite
+      ? (esc(item.placeLabel) + " · " + esc(t.locations[item.locationType] || item.locationType))
+      : (esc(t.locations[item.locationType] || item.locationType) + (chargerLabel ? " · " + esc(chargerLabel) : ""));
+
+    return '<article class="proposal-card"><div class="card-top">' +
+      '<div style="display:flex;align-items:center;gap:6px">' +
+      statusPill(item.status) +
+      sourceBadge(item.sourceType) +
+      '</div>' +
       "<strong>" + item.votesCount + " " + esc(pluralVotes(item.votesCount)) + "</strong></div><h3>" +
-      esc(item.placeLabel) + "</h3><p>" + placeInfo + '</p><a href="/wanted/' +
+      esc(title) + "</h3><p>" + placeInfo + '</p><a href="/wanted/' +
       encodeURIComponent(item.id) + '">' + t.open + " →</a></article>";
   }
 
   function sheetCard(item) {
+    var isSite = item.sourceType === "site_offer";
+    var title = isSite ? (item.siteName || item.placeLabel) : item.placeLabel;
     var isAuthor = checkIsAuthor(item);
-    var hasVoted = Boolean(item.viewerHasVoted || isAuthor);
+    var hasVoted = Boolean(item.viewerHasVoted || (isAuthor && !isSite));
     var chevronSvg = '<svg class="sheet-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>';
     var shareSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>';
-    var chargerLabel = (item.chargerType && item.chargerType !== "unknown" && (t.chargers[item.chargerType] || item.chargerType)) ? (t.chargers[item.chargerType] || item.chargerType) : "";
-    var placeInfo = esc(t.locations[item.locationType] || item.locationType) + (chargerLabel ? " · " + esc(chargerLabel) : "");
-    var voteBtnText = isAuthor ? ("✓ " + t.youAuthor) : (hasVoted ? ("✓ " + t.supported) : (t.addVote || t.support));
-    var voteBtnClass = "sheet-vote-btn" + (hasVoted ? " voted" : "") + (isAuthor ? " is-author" : "");
-    var voteBtnAttr = isAuthor ? ' disabled title="' + esc(t.cantRemoveAuthorVote) + '"' : '';
+    var chargerLabel = (!isSite && item.chargerType && item.chargerType !== "unknown" && (t.chargers[item.chargerType] || item.chargerType))
+      ? (t.chargers[item.chargerType] || item.chargerType)
+      : "";
+    var placeInfo = isSite
+      ? (esc(item.placeLabel) + " · " + esc(t.locations[item.locationType] || item.locationType))
+      : (esc(t.locations[item.locationType] || item.locationType) + (chargerLabel ? " · " + esc(chargerLabel) : ""));
+
+    var voteBtnText = isAuthor && !isSite
+      ? ("✓ " + t.youAuthor)
+      : (hasVoted ? ("✓ " + t.supported) : (t.addVote || t.support));
+    var voteBtnClass = "sheet-vote-btn" + (hasVoted ? " voted" : "") + (isAuthor && !isSite ? " is-author" : "");
+    var voteBtnAttr = (isAuthor && !isSite) ? ' disabled title="' + esc(t.cantRemoveAuthorVote) + '"' : '';
 
     return '<article class="sheet-proposal">' +
+      '<div style="margin-bottom:8px">' + sourceBadge(item.sourceType) + '</div>' +
       '<h3><a class="sheet-title-link" href="/wanted/' + encodeURIComponent(item.id) + '">' +
-      '<span>' + esc(item.placeLabel) + '</span>' + chevronSvg + '</a></h3>' +
+      '<span>' + esc(title) + '</span>' + chevronSvg + '</a></h3>' +
       '<p class="sheet-place-info">' + placeInfo + '</p>' +
       '<div class="sheet-vote-row">' +
       '<div class="sheet-vote-count">' +
@@ -560,7 +615,13 @@
     root.innerHTML = '<main class="map-page">' + header(false) +
       '<section class="map-intro"><div><h1>' + t.title +
       "</h1><p>" + t.subtitle + '</p></div><a class="primary cta" href="/wanted/new" id="propose">' +
-      t.propose + '</a></section><section class="map-layout"><div id="wanted-map" class="big-map" aria-label="' +
+      t.propose + '</a></section>' +
+      '<div class="source-filter-tabs" id="source-filter-tabs" role="tablist">' +
+      '<button type="button" class="source-filter-tab active" data-source="">' + esc(t.filterAll) + '</button>' +
+      '<button type="button" class="source-filter-tab" data-source="driver_demand">' + esc(t.filterDriverDemand) + '</button>' +
+      '<button type="button" class="source-filter-tab" data-source="site_offer">' + esc(t.filterSiteOffer) + '</button>' +
+      '</div>' +
+      '<section class="map-layout"><div id="wanted-map" class="big-map" aria-label="' +
       t.map + '"></div><aside id="results" class="results"><p class="loading">' +
       t.loading + '</p></aside></section><section id="marker-sheet" class="marker-sheet" role="dialog" aria-modal="true" aria-label="' +
       t.open + '" hidden><button class="sheet-backdrop" type="button" aria-label="' + t.close +
@@ -570,9 +631,10 @@
 
     bindHeader();
     track("wanted_map_open");
+
     function handlePropose(event) {
       if (event) event.preventDefault();
-      track("wanted_create_start");
+      track("wanted_create_started");
       WantedApi.session().then(function (session) {
         if (session && session.user) {
           navigate("/wanted/new");
@@ -599,6 +661,20 @@
           handlePropose(event);
         }
       });
+    }
+
+    var currentSourceFilter = "";
+    var filterTabsContainer = document.getElementById("source-filter-tabs");
+    if (filterTabsContainer) {
+      filterTabsContainer.onclick = function (e) {
+        var btn = e.target.closest(".source-filter-tab");
+        if (!btn) return;
+        filterTabsContainer.querySelectorAll(".source-filter-tab").forEach(function (tab) {
+          tab.classList.toggle("active", tab === btn);
+        });
+        currentSourceFilter = btn.dataset.source || "";
+        load();
+      };
     }
 
     var sheet = document.getElementById("marker-sheet");
@@ -628,10 +704,11 @@
       if (voteBtn) {
         voteBtn.onclick = function (e) {
           e.preventDefault();
-          if (checkIsAuthor(item)) return;
+          var isSite = item.sourceType === "site_offer";
+          if (checkIsAuthor(item) && !isSite) return;
           ensureAuth(function (session) {
             if (session && session.user) currentSessionUser = session.user;
-            if (checkIsAuthor(item)) {
+            if (checkIsAuthor(item) && !isSite) {
               item.isAuthor = true;
               item.viewerHasVoted = true;
               voteBtn.textContent = "✓ " + t.youAuthor;
@@ -657,7 +734,7 @@
               var labelEl = sheetContent.querySelector(".sheet-votes-label");
               if (countEl) countEl.textContent = item.votesCount;
               if (labelEl) labelEl.textContent = pluralVotes(item.votesCount);
-              if (checkIsAuthor(item)) {
+              if (checkIsAuthor(item) && !isSite) {
                 voteBtn.textContent = "✓ " + t.youAuthor;
                 voteBtn.classList.add("voted", "is-author");
                 voteBtn.disabled = true;
@@ -667,7 +744,13 @@
                 voteBtn.classList.toggle("voted", item.viewerHasVoted);
                 voteBtn.disabled = false;
               }
-              track(item.viewerHasVoted ? "wanted_vote" : "wanted_vote_cancel", { proposal_id: item.id });
+              track(item.viewerHasVoted ? "wanted_vote" : "wanted_vote_cancel", {
+                proposal_id: item.id,
+                sourceType: item.sourceType || "driver_demand",
+                locationType: item.locationType,
+                powerStatus: item.powerStatus,
+                preferredChargerType: item.preferredChargerType
+              });
             }).catch(function (err) {
               voteBtn.disabled = false;
               console.warn("Vote error:", err);
@@ -678,8 +761,9 @@
         WantedApi.getVote(item.id).then(function (res) {
           if (res) {
             if (res.isAuthor) item.isAuthor = true;
+            var isSite = item.sourceType === "site_offer";
             var isAuthor = checkIsAuthor(item);
-            if (isAuthor) {
+            if (isAuthor && !isSite) {
               item.viewerHasVoted = true;
               voteBtn.textContent = "✓ " + t.youAuthor;
               voteBtn.classList.add("voted", "is-author");
@@ -775,19 +859,15 @@
 
     function load() {
       var number = ++requestNumber;
-      WantedApi.list(boundsForRequest(), {}).then(function (response) {
+      var filters = currentSourceFilter ? { sourceType: currentSourceFilter } : {};
+      WantedApi.list(boundsForRequest(), filters).then(function (response) {
         if (number !== requestNumber) return;
-        items = response.items;
+        items = response.items || [];
         draw();
       }).catch(function () {
         document.getElementById("results").innerHTML = '<p class="error-box">' + t.loadError + "</p>";
       });
     }
-
-    WantedApi.list(null, {}).then(function (response) {
-      items = response.items;
-      draw();
-    });
 
     var initialSavedState = loadSavedMapState();
     var defaultCenter = initialSavedState ? [initialSavedState.lat, initialSavedState.lng] : [48.1, 67.7];
@@ -813,7 +893,7 @@
         updateSavedMapPos();
         load();
       });
-      draw();
+      load();
 
       addLocationControl(map, function (btn) {
         if (!navigator.geolocation) return alert(t.locateError);
@@ -860,64 +940,119 @@
   }
 
   function renderNew(session) {
+    track("wanted_create_started");
     track("wanted_create_start");
 
     var lat = Number(params.get("lat"));
     var lng = Number(params.get("lng"));
-    var valid = Number.isFinite(lat) && Number.isFinite(lng) &&
-      WantedCore.validateProposal({
-        location: { latitude: lat, longitude: lng }, placeLabel: "x", locationType: "other",
-        reason: "123456789012", frequency: "daily", chargerType: "unknown"
-      }).errors.coordinates === undefined;
+    var initialValid = Number.isFinite(lat) && Number.isFinite(lng) && WantedCore.validCoordinate(lat, lng);
+    var point = { latitude: initialValid ? lat : 43.2389, longitude: initialValid ? lng : 76.8897 };
 
-    var point = { latitude: valid ? lat : 43.2389, longitude: valid ? lng : 76.8897 };
-    var step = 1;
+    var selectedSource = null;
+    var currentStep = 0; // 0 = source selection, 1..4 = wizard steps
+
+    var state = {
+      placeLabel: "",
+      locationType: "residential",
+      // driver
+      reason: "",
+      chargerType: "unknown",
+      connectors: [],
+      authorCommentDriver: "",
+      // site
+      siteName: "",
+      siteRole: "owner",
+      representativeConfirmed: false,
+      parkingSpacesAvailable: "1",
+      siteAccess: "24_7",
+      powerStatus: "unknown",
+      availablePower: "",
+      preferredChargerType: "unknown",
+      cooperationTypes: ["provide_site"],
+      contactName: (session && session.user && (session.user.displayName || (session.user.email ? session.user.email.split("@")[0] : ""))) || "",
+      contactPhone: "",
+      contactEmail: (session && session.user && session.user.email) || "",
+      authorCommentSite: ""
+    };
+
     var map = null;
     var marker = null;
     var userMarker = null;
-
-    root.innerHTML = '<main class="page create-page">' + header(true) +
-      '<div class="create-head"><p class="eyebrow">' + t.step +
-      ' <span id="step-number">1</span> / 4</p><div class="progress"><i></i></div></div>' +
-      '<form id="proposal-form" class="panel wizard" novalidate>' +
-      '<section class="wizard-step active" data-step="1"><h2>' + t.placeStep +
-      '</h2><p class="hint">' + t.placeHelp + '</p><div id="pick-map" class="pick-map"></div>' +
-      '<button type="button" class="secondary locate" id="locate">⌖ ' + t.useLocation +
-      '</button><label>' + t.address +
-      '<input name="placeLabel" maxlength="160" placeholder="Алматы, улица…"></label></section>' +
-      '<section class="wizard-step" data-step="2"><h2>' + t.locationStep +
-      '</h2><div class="choices">' + Object.keys(t.locations).map(function (key, index) {
-        return choice("locationType", key, t.locations[key], index === 0);
-      }).join("") + '</div></section><section class="wizard-step" data-step="3"><h2>' +
-      t.reasonStep + '</h2><label><textarea name="reason" minlength="2" maxlength="500" required placeholder="' +
-      t.reasonPlaceholder + '"></textarea></label></section><section class="wizard-step" data-step="4"><h2>' +
-      t.chargerStep + '</h2><div class="choices horizontal">' +
-      Object.keys(t.chargers).map(function (key, index) {
-        return choice("chargerType", key, t.chargers[key], index === 2);
-      }).join("") + '</div><fieldset class="connector-field"><legend>' + t.connectors +
-      '</legend><div class="choices connector-choices">' +
-      ["GB/T", "CCS 2 (Type 2)", "CHAdeMO", "NACS"].map(function (name) {
-        return multiChoice("connectors", name, name);
-      }).join("") + '</div></fieldset><label>' + t.comment +
-      '<textarea name="authorComment" maxlength="500"></textarea></label></section>' +
-      '<p class="error-box" id="error-box" hidden></p><div class="wizard-actions">' +
-      '<button type="button" id="prev" class="secondary" hidden>' + t.prev +
-      '</button><button type="button" id="next" class="primary">' + t.next +
-      '</button><button type="submit" id="submit" class="primary" hidden>' + t.submit +
-      '</button></div></form><dialog id="duplicate"><div class="dialog-body"><h2>' +
-      t.duplicateTitle + '</h2><div id="duplicate-card"></div><div class="dialog-actions">' +
-      '<button value="cancel" class="secondary">' + t.duplicateContinue +
-      '</button><button id="support-duplicate" class="primary">' + t.duplicateSupport +
-      "</button></div></div></dialog></main>";
-
-    bindHeader();
-
-    var form = document.getElementById("proposal-form");
-    var errorBox = document.getElementById("error-box");
-    var previous = document.getElementById("prev");
-    var next = document.getElementById("next");
-    var submit = document.getElementById("submit");
     var geocoder = null;
+
+    function renderShell() {
+      var isWizard = currentStep >= 1;
+      var headHtml = isWizard
+        ? '<div class="create-head"><p class="eyebrow">' + t.step + ' <span id="step-number">' + currentStep + '</span> / 4</p><div class="progress"><i style="width:' + (currentStep * 25) + '%"></i></div></div>'
+        : '';
+
+      root.innerHTML = '<main class="page create-page">' + header(true) + headHtml +
+        '<div id="form-container"></div>' +
+        '<dialog id="duplicate"><div class="dialog-body"><h2 id="dup-title">' +
+        esc(t.duplicateTitle) + '</h2><p id="dup-desc" class="hint"></p><div id="duplicate-card"></div><div class="dialog-actions" id="dup-actions">' +
+        '<button value="cancel" class="secondary" id="dup-cancel-btn">' + esc(t.duplicateContinue) + '</button>' +
+        '<button id="support-duplicate" class="primary">' + esc(t.duplicateSupport) + '</button>' +
+        "</div></div></dialog></main>";
+
+      bindHeader();
+      renderContent();
+      window.scrollTo(0, 0);
+      if (document.documentElement) document.documentElement.scrollTop = 0;
+      if (document.body) document.body.scrollTop = 0;
+    }
+
+    function renderContent() {
+      var container = document.getElementById("form-container");
+      if (!container) return;
+
+      if (currentStep === 0) {
+        renderSourceSelector(container);
+      } else if (selectedSource === "driver_demand") {
+        renderDriverWizard(container);
+      } else {
+        renderSiteWizard(container);
+      }
+    }
+
+    function renderSourceSelector(container) {
+      container.innerHTML = '<section class="panel wizard">' +
+        '<h2>' + esc(t.sourceTypeTitle) + '</h2>' +
+        '<p class="hint">' + esc(t.sourceTypeSubtitle) + '</p>' +
+        '<div class="source-selector-grid">' +
+        '<button type="button" class="source-card ' + (selectedSource === "driver_demand" ? "is-selected" : "") + '" id="select-driver">' +
+        '<div class="source-card-icon">🚗</div>' +
+        '<h3>' + esc(t.driverDemandTitle) + '</h3>' +
+        '<p>' + esc(t.driverDemandDesc) + '</p>' +
+        '</button>' +
+        '<button type="button" class="source-card ' + (selectedSource === "site_offer" ? "is-selected" : "") + '" id="select-site">' +
+        '<div class="source-card-icon">🏢</div>' +
+        '<h3>' + esc(t.siteOfferTitle) + '</h3>' +
+        '<p>' + esc(t.siteOfferDesc) + '</p>' +
+        '</button>' +
+        '</div>' +
+        '</section>';
+
+      var selectDriver = document.getElementById("select-driver");
+      var selectSite = document.getElementById("select-site");
+
+      if (selectDriver) {
+        selectDriver.onclick = function () {
+          selectedSource = "driver_demand";
+          track("wanted_source_selected", { sourceType: "driver_demand" });
+          currentStep = 1;
+          renderShell();
+        };
+      }
+
+      if (selectSite) {
+        selectSite.onclick = function () {
+          selectedSource = "site_offer";
+          track("wanted_source_selected", { sourceType: "site_offer" });
+          currentStep = 1;
+          renderShell();
+        };
+      }
+    }
 
     function formatGeocodeAddress(result) {
       if (!result) return "";
@@ -983,19 +1118,67 @@
       geocoder.geocode({ location: { lat: lat, lng: lng } }, function (results, status) {
         if (status === "OK" && results && results.length > 0) {
           var formatted = formatGeocodeAddress(results[0]);
-          if (form && form.placeLabel && formatted) {
-            form.placeLabel.value = formatted;
+          if (formatted) {
+            state.placeLabel = formatted;
+            var input = document.querySelector('input[name="placeLabel"]');
+            if (input) input.value = formatted;
           }
         }
       });
     }
 
-    function updateUserLocation(userLat, userLng) {
-      if (!Number.isFinite(userLat) || !Number.isFinite(userLng)) return;
-      if (userMarker) {
-        userMarker.setPosition({ lat: userLat, lng: userLng });
-        userMarker.setVisible(true);
-      }
+    function initPickMap() {
+      createMap("pick-map", [point.latitude, point.longitude], initialValid ? 16 : 13, function (createdMap) {
+        map = createdMap;
+        userMarker = createUserLocationMarker(map);
+        marker = new google.maps.Marker(pinMarkerOptions({ lat: point.latitude, lng: point.longitude }, map, true));
+
+        if (initialValid && (!state.placeLabel || !state.placeLabel.trim())) {
+          reverseGeocode(point.latitude, point.longitude);
+        }
+
+        marker.addListener("dragend", function (event) {
+          point = { latitude: event.latLng.lat(), longitude: event.latLng.lng() };
+          reverseGeocode(point.latitude, point.longitude);
+        });
+
+        map.addListener("click", function (event) {
+          point = { latitude: event.latLng.lat(), longitude: event.latLng.lng() };
+          marker.setPosition(event.latLng);
+          reverseGeocode(point.latitude, point.longitude);
+        });
+
+        addLocationControl(map, function (btn) {
+          locate(btn);
+        });
+
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(function (position) {
+            var userLat = position.coords.latitude;
+            var userLng = position.coords.longitude;
+            if (Number.isFinite(userLat) && Number.isFinite(userLng)) {
+              var userLatLng = { lat: userLat, lng: userLng };
+              if (userMarker) {
+                userMarker.setPosition(userLatLng);
+                userMarker.setVisible(true);
+              }
+              if (!initialValid) {
+                point = { latitude: userLat, longitude: userLng };
+                if (marker) marker.setPosition(userLatLng);
+                if (map) {
+                  map.setCenter(userLatLng);
+                  map.setZoom(16);
+                }
+                reverseGeocode(userLat, userLng);
+              }
+            }
+          }, function () {}, {
+            enableHighAccuracy: false,
+            timeout: 7000,
+            maximumAge: 300000
+          });
+        }
+      });
     }
 
     function locate(button) {
@@ -1011,7 +1194,10 @@
         if (Number.isFinite(userLat) && Number.isFinite(userLng)) {
           point = { latitude: userLat, longitude: userLng };
           var latLng = { lat: userLat, lng: userLng };
-          updateUserLocation(userLat, userLng);
+          if (userMarker) {
+            userMarker.setPosition(latLng);
+            userMarker.setVisible(true);
+          }
           if (marker) marker.setPosition(latLng);
           if (map) {
             map.panTo(latLng);
@@ -1029,149 +1215,459 @@
       });
     }
 
-    createMap("pick-map", [point.latitude, point.longitude], valid ? 16 : 13, function (createdMap) {
-      map = createdMap;
-      userMarker = createUserLocationMarker(map);
-      marker = new google.maps.Marker(pinMarkerOptions({ lat: point.latitude, lng: point.longitude }, map, true));
+    function renderDriverWizard(container) {
+      var locationsHtml = Object.keys(t.locations).map(function (key) {
+        return choice("locationType", key, t.locations[key], state.locationType === key);
+      }).join("");
 
-      if (valid && (!form.placeLabel.value || !form.placeLabel.value.trim())) {
-        reverseGeocode(point.latitude, point.longitude);
+      var chargersHtml = Object.keys(t.chargers).map(function (key) {
+        return choice("chargerType", key, t.chargers[key], state.chargerType === key);
+      }).join("");
+
+      var connectorsHtml = ["GB/T", "CCS 2 (Type 2)", "CHAdeMO", "NACS"].map(function (name) {
+        return multiChoice("connectors", name, name, state.connectors.indexOf(name) >= 0);
+      }).join("");
+
+      container.innerHTML = '<form id="proposal-form" class="panel wizard" novalidate>' +
+        '<section class="wizard-step ' + (currentStep === 1 ? 'active' : '') + '" data-step="1">' +
+        '<h2>' + t.placeStep + '</h2>' +
+        '<p class="hint">' + t.placeHelp + '</p>' +
+        '<div id="pick-map" class="pick-map"></div>' +
+        '<button type="button" class="secondary locate" id="locate">⌖ ' + t.useLocation + '</button>' +
+        '<label>' + t.address +
+        '<input name="placeLabel" maxlength="160" value="' + esc(state.placeLabel) + '" placeholder="Алматы, улица…"></label>' +
+        '</section>' +
+
+        '<section class="wizard-step ' + (currentStep === 2 ? 'active' : '') + '" data-step="2">' +
+        '<h2>' + t.locationStep + '</h2>' +
+        '<div class="choices">' + locationsHtml + '</div>' +
+        '</section>' +
+
+        '<section class="wizard-step ' + (currentStep === 3 ? 'active' : '') + '" data-step="3">' +
+        '<h2>' + t.reasonStep + '</h2>' +
+        '<label><textarea name="reason" minlength="2" maxlength="500" required placeholder="' +
+        t.reasonPlaceholder + '">' + esc(state.reason) + '</textarea></label>' +
+        '</section>' +
+
+        '<section class="wizard-step ' + (currentStep === 4 ? 'active' : '') + '" data-step="4">' +
+        '<h2>' + t.chargerStep + '</h2>' +
+        '<div class="choices horizontal">' + chargersHtml + '</div>' +
+        '<fieldset class="connector-field"><legend>' + t.connectors + '</legend>' +
+        '<div class="choices connector-choices">' + connectorsHtml + '</div></fieldset>' +
+        '<label>' + t.comment +
+        '<textarea name="authorComment" maxlength="500">' + esc(state.authorCommentDriver) + '</textarea></label>' +
+        '</section>' +
+
+        '<p class="error-box" id="error-box" hidden></p>' +
+        '<div class="wizard-actions">' +
+        '<button type="button" id="prev" class="secondary">' + t.prev + '</button>' +
+        '<button type="button" id="next" class="primary" ' + (currentStep === 4 ? 'hidden' : '') + '>' + t.next + '</button>' +
+        '<button type="submit" id="submit" class="primary" ' + (currentStep !== 4 ? 'hidden' : '') + '>' + t.submit + '</button>' +
+        '</div></form>';
+
+      bindWizardEvents("driver_demand");
+    }
+
+    function renderSiteWizard(container) {
+      var locationsHtml = Object.keys(t.locations).map(function (key) {
+        return choice("locationType", key, t.locations[key], state.locationType === key);
+      }).join("");
+
+      var siteRolesHtml = Object.keys(t.siteRoles || {}).map(function (key) {
+        return choice("siteRole", key, t.siteRoles[key], state.siteRole === key);
+      }).join("");
+
+      var parkingSpacesHtml = Object.keys(t.parkingSpaces || {}).map(function (key) {
+        return choice("parkingSpacesAvailable", key, t.parkingSpaces[key], state.parkingSpacesAvailable === key);
+      }).join("");
+
+      var siteAccessHtml = Object.keys(t.siteAccesses || {}).map(function (key) {
+        return choice("siteAccess", key, t.siteAccesses[key], state.siteAccess === key);
+      }).join("");
+
+      var powerStatusHtml = Object.keys(t.powerStatuses || {}).map(function (key) {
+        return choice("powerStatus", key, t.powerStatuses[key], state.powerStatus === key);
+      }).join("");
+
+      var availablePowerHtml = Object.keys(t.availablePowers || {}).map(function (key) {
+        return choice("availablePower", key, t.availablePowers[key], state.availablePower === key);
+      }).join("");
+
+      var preferredChargersHtml = Object.keys(t.preferredChargers || {}).map(function (key) {
+        return choice("preferredChargerType", key, t.preferredChargers[key], state.preferredChargerType === key);
+      }).join("");
+
+      var cooperationHtml = Object.keys(t.cooperationOptions || {}).map(function (key) {
+        var isChecked = state.cooperationTypes.indexOf(key) >= 0;
+        return multiChoice("cooperationTypes", key, t.cooperationOptions[key], isChecked);
+      }).join("");
+
+      container.innerHTML = '<form id="proposal-form" class="panel wizard" novalidate>' +
+        // Step 1: Location & address
+        '<section class="wizard-step ' + (currentStep === 1 ? 'active' : '') + '" data-step="1">' +
+        '<h2>' + t.placeStep + '</h2>' +
+        '<p class="hint">' + t.placeHelp + '</p>' +
+        '<div id="pick-map" class="pick-map"></div>' +
+        '<button type="button" class="secondary locate" id="locate">⌖ ' + t.useLocation + '</button>' +
+        '<label>' + t.address +
+        '<input name="placeLabel" maxlength="160" value="' + esc(state.placeLabel) + '" placeholder="Алматы, улица…"></label>' +
+        '</section>' +
+
+        // Step 2: Site details
+        '<section class="wizard-step ' + (currentStep === 2 ? 'active' : '') + '" data-step="2">' +
+        '<h2>' + esc(t.siteNameLabel) + '</h2>' +
+        '<label>' + esc(t.siteNameLabel) +
+        '<input name="siteName" maxlength="160" required value="' + esc(state.siteName) + '" placeholder="' + esc(t.siteNamePlaceholder) + '"></label>' +
+        '<h3 class="subhead">' + esc(t.locationStep) + '</h3>' +
+        '<div class="choices">' + locationsHtml + '</div>' +
+        '<h3 class="subhead">' + esc(t.siteRoleLabel) + '</h3>' +
+        '<div class="choices">' + siteRolesHtml + '</div>' +
+        '<label class="checkbox-label">' +
+        '<input type="checkbox" name="representativeConfirmed" ' + (state.representativeConfirmed ? 'checked' : '') + ' required>' +
+        '<span>' + esc(t.representativeConfirmed) + '</span>' +
+        '</label>' +
+        '</section>' +
+
+        // Step 3: Capacity & Power
+        '<section class="wizard-step ' + (currentStep === 3 ? 'active' : '') + '" data-step="3">' +
+        '<h2>' + esc(t.parkingSpacesQuestion) + '</h2>' +
+        '<div class="choices">' + parkingSpacesHtml + '</div>' +
+        '<h3 class="subhead">' + esc(t.siteAccessLabel) + '</h3>' +
+        '<div class="choices">' + siteAccessHtml + '</div>' +
+        '<h3 class="subhead">' + esc(t.powerStatusQuestion) + '</h3>' +
+        '<div class="choices">' + powerStatusHtml + '</div>' +
+        '<div id="available-power-group" ' + (state.powerStatus === "available" ? "" : "hidden") + '>' +
+        '<h3 class="subhead">' + esc(t.availablePowerLabel) + '</h3>' +
+        '<div class="choices">' + availablePowerHtml + '</div>' +
+        '</div>' +
+        '<h3 class="subhead">' + esc(t.preferredChargerLabel) + '</h3>' +
+        '<div class="choices">' + preferredChargersHtml + '</div>' +
+        '</section>' +
+
+        // Step 4: Cooperation & Contacts
+        '<section class="wizard-step ' + (currentStep === 4 ? 'active' : '') + '" data-step="4">' +
+        '<h2>' + esc(t.cooperationLabel) + '</h2>' +
+        '<p class="form-field-hint">' + esc(t.cooperationHint) + '</p>' +
+        '<div class="choices">' + cooperationHtml + '</div>' +
+        '<h3 class="subhead">' + esc(t.contactNameLabel) + '</h3>' +
+        '<label>' + esc(t.contactNameLabel) +
+        '<input name="contactName" maxlength="120" required value="' + esc(state.contactName) + '" placeholder="' + esc(t.contactNamePlaceholder) + '"></label>' +
+        '<label>' + esc(t.contactPhoneLabel) +
+        '<input type="tel" name="contactPhone" maxlength="50" required value="' + esc(state.contactPhone) + '" placeholder="' + esc(t.contactPhonePlaceholder) + '"></label>' +
+        '<label>' + esc(t.contactEmailLabel) +
+        '<input type="email" name="contactEmail" maxlength="120" value="' + esc(state.contactEmail) + '" placeholder="' + esc(t.contactEmailPlaceholder) + '"></label>' +
+        '<label>' + esc(t.authorCommentSiteLabel) +
+        '<textarea name="authorComment" maxlength="1000" placeholder="' + esc(t.authorCommentSitePlaceholder) + '">' + esc(state.authorCommentSite) + '</textarea>' +
+        '<span class="form-field-hint">' + esc(t.authorCommentSiteHint) + '</span>' +
+        '</label>' +
+        '</section>' +
+
+        '<p class="error-box" id="error-box" hidden></p>' +
+        '<div class="wizard-actions">' +
+        '<button type="button" id="prev" class="secondary">' + t.prev + '</button>' +
+        '<button type="button" id="next" class="primary" ' + (currentStep === 4 ? 'hidden' : '') + '>' + t.next + '</button>' +
+        '<button type="submit" id="submit" class="primary" ' + (currentStep !== 4 ? 'hidden' : '') + '>' + (t.submitSiteOffer || t.submit) + '</button>' +
+        '</div></form>';
+
+      bindWizardEvents("site_offer");
+    }
+
+    function syncStateFromForm(type) {
+      var form = document.getElementById("proposal-form");
+      if (!form) return;
+      var data = new FormData(form);
+
+      if (data.has("placeLabel")) state.placeLabel = data.get("placeLabel") || "";
+      if (data.has("locationType")) state.locationType = data.get("locationType") || state.locationType;
+
+      if (type === "driver_demand") {
+        if (data.has("reason")) state.reason = data.get("reason") || "";
+        if (data.has("chargerType")) state.chargerType = data.get("chargerType") || state.chargerType;
+        state.connectors = data.getAll("connectors") || [];
+        if (data.has("authorComment")) state.authorCommentDriver = data.get("authorComment") || "";
+      } else {
+        if (data.has("siteName")) state.siteName = data.get("siteName") || "";
+        if (data.has("siteRole")) state.siteRole = data.get("siteRole") || state.siteRole;
+        state.representativeConfirmed = form.representativeConfirmed ? form.representativeConfirmed.checked : false;
+        if (data.has("parkingSpacesAvailable")) state.parkingSpacesAvailable = data.get("parkingSpacesAvailable") || state.parkingSpacesAvailable;
+        if (data.has("siteAccess")) state.siteAccess = data.get("siteAccess") || state.siteAccess;
+        if (data.has("powerStatus")) state.powerStatus = data.get("powerStatus") || state.powerStatus;
+        if (data.has("availablePower")) state.availablePower = data.get("availablePower") || "";
+        if (data.has("preferredChargerType")) state.preferredChargerType = data.get("preferredChargerType") || state.preferredChargerType;
+        state.cooperationTypes = data.getAll("cooperationTypes") || [];
+        if (data.has("contactName")) state.contactName = data.get("contactName") || "";
+        if (data.has("contactPhone")) state.contactPhone = data.get("contactPhone") || "";
+        if (data.has("contactEmail")) state.contactEmail = data.get("contactEmail") || "";
+        if (data.has("authorComment")) state.authorCommentSite = data.get("authorComment") || "";
+      }
+    }
+
+    function bindWizardEvents(type) {
+      if (currentStep === 1) {
+        initPickMap();
+        var locateBtn = document.getElementById("locate");
+        if (locateBtn) {
+          locateBtn.onclick = function () { locate(locateBtn); };
+        }
       }
 
-      marker.addListener("dragend", function (event) {
-        point = { latitude: event.latLng.lat(), longitude: event.latLng.lng() };
-        reverseGeocode(point.latitude, point.longitude);
-      });
+      var form = document.getElementById("proposal-form");
+      var errorBox = document.getElementById("error-box");
+      var prevBtn = document.getElementById("prev");
+      var nextBtn = document.getElementById("next");
+      var submitBtn = document.getElementById("submit");
 
-      map.addListener("click", function (event) {
-        point = { latitude: event.latLng.lat(), longitude: event.latLng.lng() };
-        marker.setPosition(event.latLng);
-        reverseGeocode(point.latitude, point.longitude);
-      });
-
-      addLocationControl(map, function (btn) {
-        locate(btn);
-      });
-
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function (position) {
-          var userLat = position.coords.latitude;
-          var userLng = position.coords.longitude;
-          if (Number.isFinite(userLat) && Number.isFinite(userLng)) {
-            var userLatLng = { lat: userLat, lng: userLng };
-            updateUserLocation(userLat, userLng);
-            if (!valid) {
-              point = { latitude: userLat, longitude: userLng };
-              if (marker) marker.setPosition(userLatLng);
-              if (map) {
-                map.setCenter(userLatLng);
-                map.setZoom(16);
-              }
-              reverseGeocode(userLat, userLng);
+      if (type === "site_offer" && currentStep === 3) {
+        var powerInputs = form.querySelectorAll('input[name="powerStatus"]');
+        var powerGroup = document.getElementById("available-power-group");
+        powerInputs.forEach(function (radio) {
+          radio.onchange = function () {
+            if (radio.value === "available") {
+              if (powerGroup) powerGroup.hidden = false;
+            } else {
+              if (powerGroup) powerGroup.hidden = true;
+              state.availablePower = "";
+              form.querySelectorAll('input[name="availablePower"]').forEach(function (apRadio) {
+                apRadio.checked = false;
+              });
             }
-          }
-        }, function () {}, {
-          enableHighAccuracy: false,
-          timeout: 7000,
-          maximumAge: 300000
+          };
         });
       }
-    });
 
-    var locateBtn = document.getElementById("locate");
-    if (locateBtn) {
-      locateBtn.onclick = function () { locate(locateBtn); };
+      if (prevBtn) {
+        prevBtn.onclick = function () {
+          syncStateFromForm(type);
+          if (currentStep === 1) {
+            currentStep = 0;
+            renderShell();
+          } else {
+            currentStep--;
+            renderShell();
+          }
+        };
+      }
+
+      if (nextBtn) {
+        nextBtn.onclick = function () {
+          syncStateFromForm(type);
+          errorBox.hidden = true;
+
+          // Step validation
+          if (type === "driver_demand") {
+            if (currentStep === 3 && (!state.reason.trim() || state.reason.trim().length < 2)) {
+              errorBox.textContent = t.validation;
+              errorBox.hidden = false;
+              if (form.reason) {
+                form.reason.focus();
+                form.reason.scrollIntoView({ behavior: "smooth", block: "center" });
+              }
+              return;
+            }
+          } else {
+            if (currentStep === 2) {
+              if (!state.siteName.trim() || state.siteName.trim().length < 2) {
+                errorBox.textContent = t.validation;
+                errorBox.hidden = false;
+                if (form.siteName) {
+                  form.siteName.focus();
+                  form.siteName.scrollIntoView({ behavior: "smooth", block: "center" });
+                }
+                return;
+              }
+              if (!state.representativeConfirmed) {
+                errorBox.textContent = t.validation;
+                errorBox.hidden = false;
+                if (form.representativeConfirmed) {
+                  form.representativeConfirmed.focus();
+                  form.representativeConfirmed.scrollIntoView({ behavior: "smooth", block: "center" });
+                }
+                return;
+              }
+            }
+            if (currentStep === 3) {
+              if (!state.parkingSpacesAvailable || !state.siteAccess || !state.powerStatus) {
+                errorBox.textContent = t.validation;
+                errorBox.hidden = false;
+                errorBox.scrollIntoView({ behavior: "smooth", block: "center" });
+                return;
+              }
+            }
+          }
+
+          currentStep++;
+          renderShell();
+        };
+      }
+
+      if (form) {
+        form.onsubmit = function (event) {
+          event.preventDefault();
+          syncStateFromForm(type);
+          errorBox.hidden = true;
+
+          var authorName = (session && session.user && (session.user.displayName || session.user.email)) || undefined;
+          var rawPlaceLabel = (state.placeLabel || "").trim();
+          var payloadInput;
+
+          if (type === "site_offer") {
+            payloadInput = {
+              sourceType: "site_offer",
+              location: { latitude: point.latitude, longitude: point.longitude },
+              placeLabel: rawPlaceLabel || state.siteName || (t.locations[state.locationType] || t.placeStep),
+              locationType: state.locationType,
+              siteName: state.siteName,
+              siteRole: state.siteRole,
+              representativeConfirmed: state.representativeConfirmed,
+              parkingSpacesAvailable: state.parkingSpacesAvailable,
+              siteAccess: state.siteAccess,
+              powerStatus: state.powerStatus,
+              preferredChargerType: state.preferredChargerType || "unknown",
+              cooperationTypes: state.cooperationTypes,
+              contactName: state.contactName,
+              contactPhone: state.contactPhone,
+              contactEmail: state.contactEmail || undefined,
+              authorComment: state.authorCommentSite || undefined
+            };
+            if (state.powerStatus === "available" && state.availablePower) {
+              payloadInput.availablePower = state.availablePower;
+            }
+          } else {
+            payloadInput = {
+              sourceType: "driver_demand",
+              location: { latitude: point.latitude, longitude: point.longitude },
+              placeLabel: rawPlaceLabel || (t.locations[state.locationType] || t.placeStep),
+              locationType: state.locationType,
+              reason: state.reason,
+              frequency: "unspecified",
+              chargerType: state.chargerType,
+              connectors: state.connectors,
+              authorComment: state.authorCommentDriver,
+              authorName: authorName
+            };
+          }
+
+          var checked = WantedCore.validateProposal(payloadInput);
+          if (!checked.valid) {
+            errorBox.textContent = t.validation;
+            errorBox.hidden = false;
+            errorBox.scrollIntoView({ behavior: "smooth", block: "center" });
+            return;
+          }
+
+          submitBtn.disabled = true;
+
+          WantedApi.nearby(checked.value, checked.value.sourceType).then(function (response) {
+            var items = (response && response.items) || [];
+            if (!items.length) {
+              return publish(checked.value, type);
+            }
+
+            var item = items[0];
+            var dialog = document.getElementById("duplicate");
+            var dupTitle = document.getElementById("dup-title");
+            var dupDesc = document.getElementById("dup-desc");
+            var dupActions = document.getElementById("dup-actions");
+            var dupCard = document.getElementById("duplicate-card");
+
+            var action = item.duplicateAction;
+            if (!action) {
+              if (type === "driver_demand") {
+                action = item.sourceType === "site_offer" ? "support_site_offer" : "vote_existing_demand";
+              } else {
+                action = item.sourceType === "site_offer" ? "verify_same_site" : "create_and_match_demand";
+              }
+            }
+
+            dupCard.innerHTML = card(item);
+
+            if (action === "vote_existing_demand") {
+              dupTitle.textContent = t.nearbyVoteDemandTitle;
+              dupDesc.textContent = t.nearbyVoteDemandText;
+              dupActions.innerHTML = '<button type="button" class="secondary" id="dup-continue-btn">' + esc(t.nearbyCreateAnyway || t.duplicateContinue) + '</button>' +
+                '<button type="button" class="primary" id="dup-support-btn">' + esc(t.nearbyVoteDemandAction || t.duplicateSupport) + '</button>';
+              document.getElementById("dup-continue-btn").onclick = function () {
+                dialog.close();
+                publish(checked.value, type);
+              };
+              document.getElementById("dup-support-btn").onclick = function () {
+                WantedApi.vote(item.id, true).then(function () { navigate("/wanted/" + item.id); });
+              };
+            } else if (action === "verify_same_site") {
+              dupTitle.textContent = t.nearbyVerifySiteTitle;
+              dupDesc.textContent = t.nearbyVerifySiteText;
+              dupActions.innerHTML = '<button type="button" class="secondary" id="dup-continue-btn">' + esc(t.nearbyCreateAnyway || t.duplicateContinue) + '</button>' +
+                '<button type="button" class="primary" id="dup-open-btn">' + esc(t.nearbyVerifySiteAction || t.open) + '</button>';
+              document.getElementById("dup-continue-btn").onclick = function () {
+                dialog.close();
+                publish(checked.value, type);
+              };
+              document.getElementById("dup-open-btn").onclick = function () {
+                navigate("/wanted/" + item.id);
+              };
+            } else if (action === "support_site_offer") {
+              dupTitle.textContent = t.nearbySupportOfferTitle;
+              dupDesc.textContent = t.nearbySupportOfferText;
+              dupActions.innerHTML = '<button type="button" class="secondary" id="dup-continue-btn">' + esc(t.nearbyCreateAnyway || t.duplicateContinue) + '</button>' +
+                '<button type="button" class="primary" id="dup-support-btn">' + esc(t.nearbySupportOfferAction || t.duplicateSupport) + '</button>';
+              document.getElementById("dup-continue-btn").onclick = function () {
+                dialog.close();
+                publish(checked.value, type);
+              };
+              document.getElementById("dup-support-btn").onclick = function () {
+                WantedApi.vote(item.id, true).then(function () { navigate("/wanted/" + item.id); });
+              };
+            } else if (action === "create_and_match_demand") {
+              dupTitle.textContent = t.nearbyMatchDemandTitle;
+              dupDesc.textContent = t.nearbyMatchDemandText;
+              dupActions.innerHTML = '<button type="button" class="primary" id="dup-match-btn">' + esc(t.nearbyMatchDemandAction || t.next) + '</button>';
+              document.getElementById("dup-match-btn").onclick = function () {
+                dialog.close();
+                publish(checked.value, type);
+              };
+            } else {
+              dupTitle.textContent = t.duplicateTitle;
+              dupDesc.textContent = "";
+              dupActions.innerHTML = '<button type="button" class="secondary" id="dup-continue-btn">' + esc(t.duplicateContinue) + '</button>' +
+                '<button type="button" class="primary" id="dup-support-btn">' + esc(t.duplicateSupport) + '</button>';
+              document.getElementById("dup-continue-btn").onclick = function () {
+                dialog.close();
+                publish(checked.value, type);
+              };
+              document.getElementById("dup-support-btn").onclick = function () {
+                WantedApi.vote(item.id, true).then(function () { navigate("/wanted/" + item.id); });
+              };
+            }
+
+            try {
+              dialog.showModal();
+            } catch (e) {
+              dialog.setAttribute("open", "");
+            }
+            submitBtn.disabled = false;
+          }).catch(function () {
+            publish(checked.value, type);
+          });
+        };
+      }
     }
 
-    function showStep(number) {
-      step = number;
-      root.querySelectorAll(".wizard-step").forEach(function (section) {
-        section.classList.toggle("active", Number(section.dataset.step) === step);
-      });
-      document.getElementById("step-number").textContent = step;
-      root.querySelector(".progress i").style.width = (step * 25) + "%";
-      previous.hidden = step === 1;
-      next.hidden = step === 4;
-      submit.hidden = step !== 4;
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-
-    next.onclick = function () {
-      if (step === 3 && (!form.reason.value.trim() || form.reason.value.trim().length < 2)) {
-        errorBox.textContent = t.validation;
-        errorBox.hidden = false;
-        form.reason.focus();
-        return;
-      }
-      errorBox.hidden = true;
-      showStep(step + 1);
-    };
-
-    previous.onclick = function () { showStep(step - 1); };
-
-    form.onsubmit = function (event) {
-      event.preventDefault();
-      var data = new FormData(form);
-      var authorName = (session && session.user && (session.user.displayName || session.user.email)) || undefined;
-      var rawPlaceLabel = (data.get("placeLabel") || "").trim();
-      var input = {
-        location: {
-          latitude: point.latitude,
-          longitude: point.longitude
-        },
-        placeLabel: rawPlaceLabel || (t.locations[data.get("locationType")] || t.placeStep),
-        locationType: data.get("locationType"),
-        reason: data.get("reason"),
-        frequency: "unspecified",
-        chargerType: data.get("chargerType"),
-        connectors: data.getAll("connectors"),
-        authorComment: data.get("authorComment"),
-        authorName: authorName
-      };
-      var checked = WantedCore.validateProposal(input);
-      if (!checked.valid) {
-        errorBox.textContent = t.validation;
-        errorBox.hidden = false;
-        if (checked.errors.placeLabel) showStep(1);
-        else if (checked.errors.reason) showStep(3);
-        return;
-      }
-      if (checked.value.locationType === "residential") {
-        checked.value.location.latitude = Number(checked.value.location.latitude.toFixed(4));
-        checked.value.location.longitude = Number(checked.value.location.longitude.toFixed(4));
-      }
-
-      submit.disabled = true;
-      WantedApi.nearby(checked.value).then(function (response) {
-        if (!response.items.length) return publish(checked.value);
-
-        track("wanted_duplicate_found");
-        var item = response.items[0];
-        var dialog = document.getElementById("duplicate");
-        document.getElementById("duplicate-card").innerHTML = card(item);
-        dialog.showModal();
-        dialog.querySelector('[value="cancel"]').onclick = function () {
-          dialog.close();
-          publish(checked.value);
-        };
-        document.getElementById("support-duplicate").onclick = function () {
-          WantedApi.vote(item.id, true).then(function () { navigate("/wanted/" + item.id); });
-        };
-        submit.disabled = false;
-      }).catch(function () { publish(checked.value); });
-    };
-
-    function openCreatedModal(item) {
+    function openCreatedModal(item, type) {
       var shareUrl = location.origin + "/wanted/" + encodeURIComponent(item.id);
       var copySvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
       var shareSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>';
 
+      var isSite = type === "site_offer";
+      var title = isSite ? (t.thankYouSiteTitle || t.thankYouTitle) : t.thankYouTitle;
+      var text = isSite ? (t.thankYouSiteText || t.thankYouText) : t.thankYouText;
+      var placeName = isSite && item.siteName ? (item.siteName + " · " + item.placeLabel) : item.placeLabel;
+
       var dialogHtml = '<dialog id="created-dialog" class="created-modal">' +
         '<div class="dialog-body created-dialog-body">' +
-        '<div class="created-icon-wrap"><span class="created-emoji">🎉</span></div>' +
-        '<h2>' + esc(t.thankYouTitle) + '</h2>' +
-        '<p class="created-place-name"><strong>' + esc(item.placeLabel) + '</strong></p>' +
-        '<p class="created-desc">' + esc(t.thankYouText) + '</p>' +
+        '<div class="created-icon-wrap"><span class="created-emoji">' + (isSite ? '🏢' : '🎉') + '</span></div>' +
+        '<h2>' + esc(title) + '</h2>' +
+        '<p class="created-place-name"><strong>' + esc(placeName) + '</strong></p>' +
+        '<p class="created-desc">' + esc(text) + '</p>' +
         '<div class="created-actions">' +
         '<button type="button" id="created-copy-btn" class="primary created-action-btn">' +
         copySvg + '<span>' + esc(t.copyLink) + '</span>' +
@@ -1235,16 +1731,45 @@
       });
     }
 
-    function publish(value) {
+    function publish(value, type) {
+      var submitBtn = document.getElementById("submit");
+      var errorBox = document.getElementById("error-box");
       WantedApi.create(value).then(function (item) {
-        track("wanted_create_success", { proposal_id: item.id });
-        openCreatedModal(item);
+        if (type === "site_offer") {
+          track("wanted_created", {
+            sourceType: "site_offer",
+            locationType: item.locationType,
+            powerStatus: item.powerStatus,
+            preferredChargerType: item.preferredChargerType
+          });
+          track("wanted_site_offer_created", {
+            sourceType: "site_offer",
+            locationType: item.locationType,
+            powerStatus: item.powerStatus,
+            preferredChargerType: item.preferredChargerType
+          });
+        } else {
+          track("wanted_created", {
+            sourceType: "driver_demand",
+            locationType: item.locationType
+          });
+          track("wanted_create_success", {
+            proposal_id: item.id,
+            sourceType: "driver_demand",
+            locationType: item.locationType
+          });
+        }
+        openCreatedModal(item, type);
       }).catch(function (error) {
-        submit.disabled = false;
-        errorBox.hidden = false;
-        errorBox.textContent = error.status === 401 ? t.authText : t.loadError;
+        if (submitBtn) submitBtn.disabled = false;
+        if (errorBox) {
+          errorBox.hidden = false;
+          errorBox.textContent = error.status === 401 ? t.authText : t.loadError;
+        }
       });
     }
+
+    renderShell();
   }
 
   function renderDetail(id) {
@@ -1259,49 +1784,104 @@
         return;
       }
 
+      var isSite = item.sourceType === "site_offer";
+
       if (!loadSavedMapState() && item.location && Number.isFinite(item.location.latitude) && Number.isFinite(item.location.longitude)) {
         saveMapState(item.location.latitude, item.location.longitude, 14);
       }
 
       var isAuthor = checkIsAuthor(item);
-      if (isAuthor) item.viewerHasVoted = true;
+      if (isAuthor && !isSite) item.viewerHasVoted = true;
 
-      track("wanted_proposal_open", { proposal_id: id });
-      document.title = item.placeLabel + " — " + item.votesCount + " " + esc(pluralVotes(item.votesCount)) + " | evPoint.kz";
-      var description = item.placeLabel + " · " + item.votesCount + " " + pluralVotes(item.votesCount) + ". " + item.reason;
+      track("wanted_proposal_open", {
+        proposal_id: id,
+        sourceType: item.sourceType || "driver_demand",
+        locationType: item.locationType,
+        powerStatus: item.powerStatus,
+        preferredChargerType: item.preferredChargerType
+      });
+
+      var titleText = isSite && item.siteName ? item.siteName : item.placeLabel;
+      document.title = titleText + " — " + item.votesCount + " " + esc(pluralVotes(item.votesCount)) + " | evPoint.kz";
+      var description = titleText + " · " + item.votesCount + " " + pluralVotes(item.votesCount) + ". " + (item.reason || item.authorComment || "");
       document.querySelector('meta[name="description"]')?.setAttribute("content", description);
       document.querySelector('meta[property="og:title"]')?.setAttribute("content", document.title);
       document.querySelector('meta[property="og:description"]')?.setAttribute("content", description);
 
-      var authorName = item.authorName || t.driver || (lang === "kk" ? "Жүргізуші" : (lang === "en" ? "Driver" : "Водитель"));
+      var authorName = isSite
+        ? (t.badgeSiteOffer || "Площадка от бизнеса")
+        : (item.authorName || t.driver || "Водитель");
       var authorSvg = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
       var authorHtml = '<span class="author-tag">' + authorSvg + '<span>' + esc(authorName) + '</span></span>';
       var shareSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>';
 
-      var preferredParts = [];
-      if (item.chargerType && item.chargerType !== "unknown") {
-        preferredParts.push(esc(t.chargers[item.chargerType] || item.chargerType));
-      }
-      if (item.connectors && item.connectors.length) {
-        preferredParts.push(esc(item.connectors.join(", ")));
-      }
-      var preferredHtml = preferredParts.length
-        ? "<div><dt>" + t.preferred + "</dt><dd>" + preferredParts.join(" · ") + "</dd></div>"
-        : "";
+      var detailsListHtml = "";
+      if (isSite) {
+        var siteParts = [];
+        if (item.placeLabel) {
+          siteParts.push('<div><dt>' + esc(t.address) + '</dt><dd>' + esc(item.placeLabel) + '</dd></div>');
+        }
+        if (item.locationType) {
+          siteParts.push('<div><dt>' + esc(t.locationStep) + '</dt><dd>' + esc(t.locations[item.locationType] || item.locationType) + '</dd></div>');
+        }
+        if (item.parkingSpacesAvailable) {
+          siteParts.push('<div><dt>' + esc(t.parkingSpacesDetail) + '</dt><dd>' + esc((t.parkingSpaces && t.parkingSpaces[item.parkingSpacesAvailable]) || item.parkingSpacesAvailable) + '</dd></div>');
+        }
+        if (item.siteAccess) {
+          siteParts.push('<div><dt>' + esc(t.siteAccessDetail) + '</dt><dd>' + esc((t.siteAccesses && t.siteAccesses[item.siteAccess]) || item.siteAccess) + '</dd></div>');
+        }
+        if (item.powerStatus) {
+          siteParts.push('<div><dt>' + esc(t.powerStatusDetail) + '</dt><dd>' + esc((t.powerStatuses && t.powerStatuses[item.powerStatus]) || item.powerStatus) + '</dd></div>');
+        }
+        if (item.availablePower) {
+          siteParts.push('<div><dt>' + esc(t.availablePowerDetail) + '</dt><dd>' + esc((t.availablePowers && t.availablePowers[item.availablePower]) || item.availablePower) + '</dd></div>');
+        }
+        if (item.preferredChargerType && item.preferredChargerType !== "unknown") {
+          siteParts.push('<div><dt>' + esc(t.preferredChargerDetail) + '</dt><dd>' + esc((t.preferredChargers && t.preferredChargers[item.preferredChargerType]) || item.preferredChargerType) + '</dd></div>');
+        }
+        if (item.authorComment) {
+          siteParts.push('<div style="grid-column:1/-1"><dt>' + esc(t.comment) + '</dt><dd>' + esc(item.authorComment) + '</dd></div>');
+        }
+        detailsListHtml = '<dl>' + siteParts.join("") + '</dl>';
+      } else {
+        var preferredParts = [];
+        if (item.chargerType && item.chargerType !== "unknown") {
+          preferredParts.push(esc(t.chargers[item.chargerType] || item.chargerType));
+        }
+        if (item.connectors && item.connectors.length) {
+          preferredParts.push(esc(item.connectors.join(", ")));
+        }
+        var preferredHtml = preferredParts.length
+          ? "<div><dt>" + t.preferred + "</dt><dd>" + preferredParts.join(" · ") + "</dd></div>"
+          : "";
 
-      var voteBtnText = isAuthor ? ("✓ " + t.youAuthor) : (item.viewerHasVoted ? ("✓ " + t.supported) : t.support);
-      var voteBtnClass = "primary" + (item.viewerHasVoted ? " voted" : "") + (isAuthor ? " is-author" : "");
-      var voteBtnAttr = isAuthor ? ' disabled title="' + esc(t.cantRemoveAuthorVote) + '"' : '';
+        detailsListHtml = '<dl><div><dt>' + t.reason + "</dt><dd>" +
+          esc(item.reason) + "</dd></div>" +
+          preferredHtml +
+          (item.authorComment ? ('<div style="grid-column:1/-1"><dt>' + esc(t.comment) + '</dt><dd>' + esc(item.authorComment) + '</dd></div>') : '') +
+          '</dl>';
+      }
+
+      var voteBtnText = (isAuthor && !isSite)
+        ? ("✓ " + t.youAuthor)
+        : (item.viewerHasVoted ? ("✓ " + t.supported) : (isSite ? t.siteOfferCta : t.support));
+      var voteBtnClass = "primary" + (item.viewerHasVoted ? " voted" : "") + ((isAuthor && !isSite) ? " is-author" : "");
+      var voteBtnAttr = (isAuthor && !isSite) ? ' disabled title="' + esc(t.cantRemoveAuthorVote) + '"' : '';
+
+      var siteBannerHtml = isSite
+        ? '<div class="site-offer-banner"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg><span>' + esc(t.siteOfferBanner) + '</span></div>'
+        : '';
 
       root.innerHTML = '<main class="page detail-page">' + header(true) +
         '<section class="detail-grid"><div><div id="detail-map" class="detail-map"></div>' +
-        '<article class="panel detail-card"><div class="card-top">' + authorHtml +
+        '<article class="panel detail-card"><div class="card-top">' +
+        '<div style="display:flex;align-items:center;gap:8px">' + authorHtml + sourceBadge(item.sourceType) + '</div>' +
         "<span>" + new Intl.DateTimeFormat(lang, { dateStyle: "medium" }).format(new Date(item.createdAt)) +
-        "</span></div><h1>" + esc(item.placeLabel) + '</h1><p class="category">' +
-        esc(t.locations[item.locationType]) + '</p><dl><div><dt>' + t.reason + "</dt><dd>" +
-        esc(item.reason) + "</dd></div>" +
-        preferredHtml +
-        '</dl></article></div><aside><section class="panel vote-panel">' +
+        "</span></div><h1>" + esc(titleText) + '</h1><p class="category">' +
+        esc(t.locations[item.locationType]) + '</p>' +
+        detailsListHtml +
+        '</article></div><aside><section class="panel vote-panel">' +
+        siteBannerHtml +
         '<div class="vote-count"><strong id="vote-count">' + item.votesCount + '</strong><span id="vote-label">' +
         esc(pluralVotes(item.votesCount)) + '</span></div><button id="vote" class="' + voteBtnClass + '"' + voteBtnAttr + '>' +
         voteBtnText +
@@ -1312,7 +1892,7 @@
         '</section></aside></section><section class="panel comments"><h2>' + t.comments +
         '</h2><div id="comments-list">' +
         ((item.comments || []).length ? item.comments.map(function (comment) {
-          var commentAuthor = comment.authorName || t.driver || (lang === "kk" ? "Жүргізуші" : (lang === "en" ? "Driver" : "Водитель"));
+          var commentAuthor = comment.authorName || t.driver || "Водитель";
           return "<article><div class=\"card-top\"><span class=\"author-tag\">" +
             authorSvg + "<span>" + esc(commentAuthor) + "</span></span><time>" +
             new Intl.DateTimeFormat(lang, { dateStyle: "medium" }).format(new Date(comment.createdAt)) +
@@ -1327,7 +1907,7 @@
 
       function updateVoteButtonState(hasVoted, forceAuthor) {
         var isAuth = forceAuthor !== undefined ? Boolean(forceAuthor) : checkIsAuthor(item);
-        if (isAuth) {
+        if (isAuth && !isSite) {
           item.isAuthor = true;
           item.viewerHasVoted = true;
         } else {
@@ -1335,13 +1915,13 @@
         }
         var voteBtn = document.getElementById("vote");
         if (voteBtn) {
-          if (isAuth) {
+          if (isAuth && !isSite) {
             voteBtn.textContent = "✓ " + t.youAuthor;
             voteBtn.classList.add("voted", "is-author");
             voteBtn.disabled = true;
             voteBtn.title = t.cantRemoveAuthorVote;
           } else {
-            voteBtn.textContent = item.viewerHasVoted ? "✓ " + t.supported : t.support;
+            voteBtn.textContent = item.viewerHasVoted ? "✓ " + t.supported : (isSite ? t.siteOfferCta : t.support);
             voteBtn.classList.toggle("voted", item.viewerHasVoted);
             voteBtn.classList.remove("is-author");
             voteBtn.disabled = false;
@@ -1354,7 +1934,7 @@
         if (res) {
           if (res.isAuthor) item.isAuthor = true;
           var isAuth = checkIsAuthor(item);
-          if (isAuth) {
+          if (isAuth && !isSite) {
             updateVoteButtonState(true, true);
           } else if (res.voted != null || res.viewerHasVoted != null || res.hasVoted != null) {
             var hasVoted = Boolean(res.voted || res.viewerHasVoted || res.hasVoted);
@@ -1368,18 +1948,18 @@
       });
 
       var vote = document.getElementById("vote");
-      if (isAuthor) {
+      if (isAuthor && !isSite) {
         vote.disabled = true;
         vote.title = t.cantRemoveAuthorVote;
       }
       vote.onclick = function () {
-        if (checkIsAuthor(item)) {
+        if (checkIsAuthor(item) && !isSite) {
           updateVoteButtonState(true, true);
           return;
         }
         ensureAuth(function (session) {
           if (session && session.user) currentSessionUser = session.user;
-          if (checkIsAuthor(item)) {
+          if (checkIsAuthor(item) && !isSite) {
             updateVoteButtonState(true, true);
             return;
           }
@@ -1393,8 +1973,14 @@
             var hasVoted = updated && updated.viewerHasVoted != null ? Boolean(updated.viewerHasVoted) : target;
             if (updated && updated.isAuthor) item.isAuthor = true;
             updateVoteButtonState(hasVoted);
-            vote.disabled = checkIsAuthor(item);
-            track(hasVoted ? "wanted_vote" : "wanted_vote_cancel", { proposal_id: id });
+            vote.disabled = checkIsAuthor(item) && !isSite;
+            track(hasVoted ? "wanted_vote" : "wanted_vote_cancel", {
+              proposal_id: id,
+              sourceType: item.sourceType || "driver_demand",
+              locationType: item.locationType,
+              powerStatus: item.powerStatus,
+              preferredChargerType: item.preferredChargerType
+            });
           }).catch(function (err) {
             vote.disabled = false;
             console.warn("Vote error:", err);
@@ -1486,17 +2072,27 @@
       var shareSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>';
 
       container.innerHTML = '<div class="my-proposals-grid">' + sorted.map(function (item) {
-        var chargerLabel = (item.chargerType && item.chargerType !== "unknown" && (t.chargers[item.chargerType] || item.chargerType)) ? (t.chargers[item.chargerType] || item.chargerType) : "";
-        var placeInfo = esc(t.locations[item.locationType] || item.locationType) + (chargerLabel ? " · " + esc(chargerLabel) : "");
+        var isSite = item.sourceType === "site_offer";
+        var title = isSite ? (item.siteName || item.placeLabel) : item.placeLabel;
+        var chargerLabel = (!isSite && item.chargerType && item.chargerType !== "unknown" && (t.chargers[item.chargerType] || item.chargerType)) ? (t.chargers[item.chargerType] || item.chargerType) : "";
+        var placeInfo = isSite
+          ? (esc(item.placeLabel) + " · " + esc(t.locations[item.locationType] || item.locationType))
+          : (esc(t.locations[item.locationType] || item.locationType) + (chargerLabel ? " · " + esc(chargerLabel) : ""));
         var dateStr = item.createdAt ? new Intl.DateTimeFormat(lang, { dateStyle: "medium" }).format(new Date(item.createdAt)) : "";
+        var description = isSite
+          ? (item.authorComment || (t.parkingSpacesDetail + ": " + ((t.parkingSpaces && t.parkingSpaces[item.parkingSpacesAvailable]) || item.parkingSpacesAvailable || "")))
+          : (item.reason || "");
 
         return '<article class="proposal-card my-proposal-card">' +
           '<div class="card-top">' +
+          '<div style="display:flex;align-items:center;gap:6px">' +
           statusPill(item.status) +
+          sourceBadge(item.sourceType) +
+          '</div>' +
           '<span class="my-card-date">' + esc(dateStr) + '</span>' +
           '</div>' +
-          '<h3><a href="/wanted/' + encodeURIComponent(item.id) + '">' + esc(item.placeLabel) + '</a></h3>' +
-          '<p class="my-card-reason">' + esc(item.reason) + '</p>' +
+          '<h3><a href="/wanted/' + encodeURIComponent(item.id) + '">' + esc(title) + '</a></h3>' +
+          (description ? '<p class="my-card-reason">' + esc(description) + '</p>' : '') +
           '<p class="my-card-info">' + placeInfo + '</p>' +
           '<div class="my-card-bottom">' +
           '<div class="my-card-votes"><strong>' + item.votesCount + '</strong> <span>' + esc(pluralVotes(item.votesCount)) + '</span></div>' +
@@ -1631,3 +2227,4 @@
 
   route();
 }());
+

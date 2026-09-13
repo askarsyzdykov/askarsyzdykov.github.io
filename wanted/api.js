@@ -153,6 +153,7 @@
       if (bounds.east != null) params.set("east", bounds.east);
     }
     if (filters) {
+      if (filters.sourceType) params.set("sourceType", filters.sourceType);
       if (filters.status) params.set("status", filters.status);
       if (filters.locationType) params.set("locationType", filters.locationType);
       if (filters.chargerType) params.set("chargerType", filters.chargerType);
@@ -168,8 +169,17 @@
     });
   }
 
-  function nearby(point) {
-    return request("/nearby?lat=" + encodeURIComponent(point.location.latitude) + "&lng=" + encodeURIComponent(point.location.longitude) + "&radius=300");
+  function nearby(point, sourceType) {
+    var lat = point && point.location ? point.location.latitude : (point ? point.latitude : null);
+    var lng = point && point.location ? point.location.longitude : (point ? point.longitude : null);
+    var src = sourceType || (point && point.sourceType) || "driver_demand";
+    var params = new URLSearchParams({
+      lat: String(lat),
+      lng: String(lng),
+      radius: "300",
+      sourceType: String(src)
+    });
+    return request("/nearby?" + params.toString());
   }
 
   function create(input) {
