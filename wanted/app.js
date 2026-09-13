@@ -1312,9 +1312,11 @@
         '</section></aside></section><section class="panel comments"><h2>' + t.comments +
         '</h2><div id="comments-list">' +
         ((item.comments || []).length ? item.comments.map(function (comment) {
-          return "<article><p>" + esc(comment.text) + "</p><time>" +
+          var commentAuthor = comment.authorName || t.driver || (lang === "kk" ? "Жүргізуші" : (lang === "en" ? "Driver" : "Водитель"));
+          return "<article><div class=\"card-top\"><span class=\"author-tag\">" +
+            authorSvg + "<span>" + esc(commentAuthor) + "</span></span><time>" +
             new Intl.DateTimeFormat(lang, { dateStyle: "medium" }).format(new Date(comment.createdAt)) +
-            "</time></article>";
+            "</time></div><p>" + esc(comment.text) + "</p></article>";
         }).join("") : '<p class="hint">' + t.noComments + "</p>") +
         '</div><form id="comment-form"><label>' + t.addComment +
         '<textarea name="text" maxlength="500" placeholder="' + t.commentPlaceholder +
