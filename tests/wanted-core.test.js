@@ -269,4 +269,39 @@ test("has all site_offer dictionary translations in RU, KK, EN", () => {
   }
 });
 
+test("debounces rapid consecutive calls into a single execution", async () => {
+  let callCount = 0;
+  let lastArg = null;
+  const fn = (val) => {
+    callCount++;
+    lastArg = val;
+  };
+
+  const debounced = core.debounce(fn, 50);
+  debounced(1);
+  debounced(2);
+  debounced(3);
+
+  assert.equal(callCount, 0);
+
+  await new Promise((resolve) => setTimeout(resolve, 80));
+
+  assert.equal(callCount, 1);
+  assert.equal(lastArg, 3);
+});
+
+test("supports cancelling debounced call", async () => {
+  let callCount = 0;
+  const debounced = core.debounce(() => {
+    callCount++;
+  }, 50);
+
+  debounced();
+  debounced.cancel();
+
+  await new Promise((resolve) => setTimeout(resolve, 80));
+
+  assert.equal(callCount, 0);
+});
+
 

@@ -324,6 +324,28 @@
     return "голосов";
   }
 
+  function debounce(fn, wait) {
+    var timeout = null;
+    var debounced = function () {
+      var context = this;
+      var args = arguments;
+      if (timeout) {
+        clearTimeout(timeout);
+      }
+      timeout = setTimeout(function () {
+        timeout = null;
+        fn.apply(context, args);
+      }, wait != null ? wait : 300);
+    };
+    debounced.cancel = function () {
+      if (timeout) {
+        clearTimeout(timeout);
+        timeout = null;
+      }
+    };
+    return debounced;
+  }
+
   return {
     SOURCE_TYPES: SOURCE_TYPES,
     LOCATION_TYPES: LOCATION_TYPES,
@@ -346,6 +368,7 @@
     nearby: nearby,
     inBounds: inBounds,
     matches: matches,
-    pluralVotes: pluralVotes
+    pluralVotes: pluralVotes,
+    debounce: debounce
   };
 }));

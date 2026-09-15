@@ -621,7 +621,7 @@
       '<button type="button" class="source-filter-tab" data-source="driver_demand">' + esc(t.filterDriverDemand) + '</button>' +
       '<button type="button" class="source-filter-tab" data-source="site_offer">' + esc(t.filterSiteOffer) + '</button>' +
       '</div>' +
-      '<section class="map-layout"><div id="wanted-map" class="big-map" aria-label="' +
+      '<section class="map-layout"><div id="map-progress" class="map-progress-bar" aria-hidden="true"></div><div id="wanted-map" class="big-map" aria-label="' +
       t.map + '"></div><aside id="results" class="results"><p class="loading">' +
       t.loading + '</p></aside></section><section id="marker-sheet" class="marker-sheet" role="dialog" aria-modal="true" aria-label="' +
       t.open + '" hidden><button class="sheet-backdrop" type="button" aria-label="' + t.close +
@@ -857,17 +857,32 @@
       };
     }
 
+    var progressEl = null;
+    function setProgress(loading) {
+      if (!progressEl) progressEl = document.getElementById("map-progress");
+      if (progressEl) {
+        progressEl.classList.toggle("is-active", Boolean(loading));
+      }
+    }
+
     function load() {
       var number = ++requestNumber;
       var filters = currentSourceFilter ? { sourceType: currentSourceFilter } : {};
+      setProgress(true);
       WantedApi.list(boundsForRequest(), filters).then(function (response) {
         if (number !== requestNumber) return;
+        setProgress(false);
         items = response.items || [];
         draw();
       }).catch(function () {
-        document.getElementById("results").innerHTML = '<p class="error-box">' + t.loadError + "</p>";
+        if (number === requestNumber) {
+          setProgress(false);
+          document.getElementById("results").innerHTML = '<p class="error-box">' + t.loadError + "</p>";
+        }
       });
     }
+
+    var debouncedLoad = WantedCore.debounce(load, 500);
 
     var initialSavedState = loadSavedMapState();
     var defaultCenter = initialSavedState ? [initialSavedState.lat, initialSavedState.lng] : [48.1, 67.7];
@@ -891,7 +906,7 @@
 
       map.addListener("idle", function () {
         updateSavedMapPos();
-        load();
+        debouncedLoad();
       });
       load();
 
