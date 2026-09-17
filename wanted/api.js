@@ -57,15 +57,12 @@
     var auth = getFirebaseAuth();
     if (!auth) return Promise.resolve(null);
     if (auth.currentUser) return Promise.resolve(auth.currentUser);
-    authReadyPromise = getRedirectResult().then(function () {
-      if (auth.currentUser) return Promise.resolve(auth.currentUser);
-      return new Promise(function (resolve) {
-        var unsubscribe = auth.onAuthStateChanged(function (fbUser) {
-          unsubscribe();
-          resolve(fbUser);
-        });
-        setTimeout(function () { resolve(auth.currentUser); }, 1500);
+    authReadyPromise = new Promise(function (resolve) {
+      var unsubscribe = auth.onAuthStateChanged(function (fbUser) {
+        unsubscribe();
+        resolve(fbUser);
       });
+      setTimeout(function () { resolve(auth.currentUser); }, 1200);
     });
     return authReadyPromise;
   }
@@ -139,21 +136,13 @@
     var provider = new firebase.auth.GoogleAuthProvider();
     provider.addScope("profile");
     provider.addScope("email");
-    var useRedirect = (options && options.redirect != null) ? options.redirect : isMobileDevice();
-    if (useRedirect) {
+    if (options && options.redirect === true) {
       return auth.signInWithRedirect(provider).then(function () {
         return { redirecting: true };
       });
     }
     return auth.signInWithPopup(provider).then(function (result) {
       return { user: formatUser(result.user) };
-    }).catch(function (error) {
-      if (error && (error.code === "auth/popup-blocked" || error.code === "auth/cancelled-popup-request")) {
-        return auth.signInWithRedirect(provider).then(function () {
-          return { redirecting: true };
-        });
-      }
-      throw error;
     });
   }
 
@@ -163,21 +152,13 @@
     var provider = new firebase.auth.OAuthProvider("apple.com");
     provider.addScope("email");
     provider.addScope("name");
-    var useRedirect = (options && options.redirect != null) ? options.redirect : isMobileDevice();
-    if (useRedirect) {
+    if (options && options.redirect === true) {
       return auth.signInWithRedirect(provider).then(function () {
         return { redirecting: true };
       });
     }
     return auth.signInWithPopup(provider).then(function (result) {
       return { user: formatUser(result.user) };
-    }).catch(function (error) {
-      if (error && (error.code === "auth/popup-blocked" || error.code === "auth/cancelled-popup-request")) {
-        return auth.signInWithRedirect(provider).then(function () {
-          return { redirecting: true };
-        });
-      }
-      throw error;
     });
   }
 

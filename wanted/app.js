@@ -559,23 +559,13 @@
         errorBox.textContent = "";
         errorBox.hidden = true;
       }
-      var isMobile = WantedApi.isMobileDevice ? WantedApi.isMobileDevice() : false;
-      if (isMobile) {
-        var buttons = sheet.querySelectorAll(".social-btn");
-        for (var i = 0; i < buttons.length; i++) {
-          buttons[i].disabled = true;
-        }
-        if (errorBox) {
-          errorBox.textContent = t.authRedirecting || "Перенаправление...";
-          errorBox.hidden = false;
-        }
+      var buttons = sheet.querySelectorAll(".social-btn");
+      for (var i = 0; i < buttons.length; i++) {
+        buttons[i].disabled = true;
       }
 
       var promise = provider === "apple" ? WantedApi.signInWithApple() : WantedApi.signInWithGoogle();
       promise.then(function (session) {
-        if (session && session.redirecting) {
-          return;
-        }
         close(false);
         if (session && session.user) {
           currentSessionUser = session.user;
@@ -583,7 +573,6 @@
         }
         if (typeof onSuccess === "function") onSuccess(session);
       }).catch(function (error) {
-        var buttons = sheet.querySelectorAll(".social-btn");
         for (var j = 0; j < buttons.length; j++) {
           buttons[j].disabled = false;
         }
