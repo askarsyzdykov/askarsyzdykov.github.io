@@ -163,6 +163,10 @@
       signIn: "Войти",
       devSignIn: "Войти в локальном режиме",
       authUnavailable: "Авторизация временно недоступна. Попробуйте позже.",
+      authPopupClosed: "Окно авторизации было закрыто до завершения входа. Пожалуйста, попробуйте снова.",
+      authPopupBlocked: "Всплывающее окно заблокировано браузером. Пожалуйста, разрешите всплывающие окна или продолжите вход.",
+      authUnauthorizedDomain: "Домен не разрешен в настройках Firebase Authentication.",
+      authRedirecting: "Перенаправление на страницу входа...",
       validation: "Проверьте обязательные поля.",
 
       // Nearby dialogs
@@ -406,6 +410,10 @@
       signIn: "Кіру",
       devSignIn: "Жергілікті режимде кіру",
       authUnavailable: "Кіру уақытша қолжетімсіз.",
+      authPopupClosed: "Кіру терезесі аяқталмай жабылып қалды. Қайталап көріңіз.",
+      authPopupBlocked: "Браузер қалқымалы терезені бұғаттады. Қалқымалы терезелерге рұқсат беріңіз.",
+      authUnauthorizedDomain: "Доменге Firebase Authentication арқылы рұқсат берілмеген.",
+      authRedirecting: "Кіру бетіне бағытталуда...",
       validation: "Міндетті өрістерді тексеріңіз.",
 
       // Nearby dialogs
@@ -649,6 +657,10 @@
       signIn: "Sign in",
       devSignIn: "Sign in locally",
       authUnavailable: "Sign-in is temporarily unavailable.",
+      authPopupClosed: "The sign-in window was closed before completing. Please try again.",
+      authPopupBlocked: "Pop-up window was blocked by the browser. Please allow pop-ups or continue.",
+      authUnauthorizedDomain: "Domain is not authorized in Firebase Authentication settings.",
+      authRedirecting: "Redirecting to sign-in...",
       validation: "Check the required fields.",
 
       // Nearby dialogs

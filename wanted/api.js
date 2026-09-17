@@ -24,18 +24,48 @@
     return config.apiUrl;
   }
 
+  function isMobileDevice() {
+    if (typeof window === "undefined" || !window.navigator) return false;
+    var ua = navigator.userAgent || navigator.vendor || window.opera || "";
+    var isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+    var isTouchMac = /Macintosh/i.test(ua) && typeof navigator.maxTouchPoints === "number" && navigator.maxTouchPoints > 2;
+    return isMobileUA || isTouchMac;
+  }
+
+  var redirectResultPromise = null;
+  function getRedirectResult() {
+    if (redirectResultPromise) return redirectResultPromise;
+    var auth = getFirebaseAuth();
+    if (!auth || typeof auth.getRedirectResult !== "function") {
+      return Promise.resolve(null);
+    }
+    redirectResultPromise = auth.getRedirectResult().then(function (result) {
+      if (result && result.user) {
+        return { user: formatUser(result.user), credential: result.credential };
+      }
+      return null;
+    }).catch(function (error) {
+      console.warn("Firebase getRedirectResult error:", error);
+      return { error: error };
+    });
+    return redirectResultPromise;
+  }
+
   var authReadyPromise = null;
   function waitForAuthReady() {
     if (authReadyPromise) return authReadyPromise;
     var auth = getFirebaseAuth();
     if (!auth) return Promise.resolve(null);
     if (auth.currentUser) return Promise.resolve(auth.currentUser);
-    authReadyPromise = new Promise(function (resolve) {
-      var unsubscribe = auth.onAuthStateChanged(function (fbUser) {
-        unsubscribe();
-        resolve(fbUser);
+    authReadyPromise = getRedirectResult().then(function () {
+      if (auth.currentUser) return Promise.resolve(auth.currentUser);
+      return new Promise(function (resolve) {
+        var unsubscribe = auth.onAuthStateChanged(function (fbUser) {
+          unsubscribe();
+          resolve(fbUser);
+        });
+        setTimeout(function () { resolve(auth.currentUser); }, 1500);
       });
-      setTimeout(function () { resolve(auth.currentUser); }, 1200);
     });
     return authReadyPromise;
   }
@@ -103,30 +133,56 @@
     });
   }
 
-  function signInWithGoogle() {
+  function signInWithGoogle(options) {
     var auth = getFirebaseAuth();
     if (!auth) return Promise.reject(new Error("Firebase auth is not configured"));
     var provider = new firebase.auth.GoogleAuthProvider();
     provider.addScope("profile");
     provider.addScope("email");
+    var useRedirect = (options && options.redirect != null) ? options.redirect : isMobileDevice();
+    if (useRedirect) {
+      return auth.signInWithRedirect(provider).then(function () {
+        return { redirecting: true };
+      });
+    }
     return auth.signInWithPopup(provider).then(function (result) {
       return { user: formatUser(result.user) };
+    }).catch(function (error) {
+      if (error && (error.code === "auth/popup-blocked" || error.code === "auth/cancelled-popup-request")) {
+        return auth.signInWithRedirect(provider).then(function () {
+          return { redirecting: true };
+        });
+      }
+      throw error;
     });
   }
 
-  function signInWithApple() {
+  function signInWithApple(options) {
     var auth = getFirebaseAuth();
     if (!auth) return Promise.reject(new Error("Firebase auth is not configured"));
     var provider = new firebase.auth.OAuthProvider("apple.com");
     provider.addScope("email");
     provider.addScope("name");
+    var useRedirect = (options && options.redirect != null) ? options.redirect : isMobileDevice();
+    if (useRedirect) {
+      return auth.signInWithRedirect(provider).then(function () {
+        return { redirecting: true };
+      });
+    }
     return auth.signInWithPopup(provider).then(function (result) {
       return { user: formatUser(result.user) };
+    }).catch(function (error) {
+      if (error && (error.code === "auth/popup-blocked" || error.code === "auth/cancelled-popup-request")) {
+        return auth.signInWithRedirect(provider).then(function () {
+          return { redirecting: true };
+        });
+      }
+      throw error;
     });
   }
 
-  function signIn() {
-    return signInWithGoogle();
+  function signIn(options) {
+    return signInWithGoogle(options);
   }
 
   function signOut() {
@@ -236,6 +292,8 @@
     signInWithApple: signInWithApple,
     signOut: signOut,
     onAuthStateChanged: onAuthStateChanged,
+    getRedirectResult: getRedirectResult,
+    isMobileDevice: isMobileDevice,
     formatUser: formatUser,
     list: list,
     myProposals: myProposals,

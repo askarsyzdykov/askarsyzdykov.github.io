@@ -555,8 +555,27 @@
     backdrop.onclick = function () { close(true); };
 
     function handleAuth(provider) {
+      if (errorBox) {
+        errorBox.textContent = "";
+        errorBox.hidden = true;
+      }
+      var isMobile = WantedApi.isMobileDevice ? WantedApi.isMobileDevice() : false;
+      if (isMobile) {
+        var buttons = sheet.querySelectorAll(".social-btn");
+        for (var i = 0; i < buttons.length; i++) {
+          buttons[i].disabled = true;
+        }
+        if (errorBox) {
+          errorBox.textContent = t.authRedirecting || "Перенаправление...";
+          errorBox.hidden = false;
+        }
+      }
+
       var promise = provider === "apple" ? WantedApi.signInWithApple() : WantedApi.signInWithGoogle();
       promise.then(function (session) {
+        if (session && session.redirecting) {
+          return;
+        }
         close(false);
         if (session && session.user) {
           currentSessionUser = session.user;
@@ -564,12 +583,18 @@
         }
         if (typeof onSuccess === "function") onSuccess(session);
       }).catch(function (error) {
+        var buttons = sheet.querySelectorAll(".social-btn");
+        for (var j = 0; j < buttons.length; j++) {
+          buttons[j].disabled = false;
+        }
         if (errorBox) {
-          var msg = error && error.message ? error.message : t.authUnavailable;
+          var msg = (error && error.message) ? error.message : t.authUnavailable;
           if (error && error.code === "auth/unauthorized-domain") {
-            msg = "Домен не разрешен в Firebase Console -> Authentication -> Settings -> Authorized domains";
+            msg = t.authUnauthorizedDomain || "Домен не разрешен в Firebase Console -> Authentication -> Settings -> Authorized domains";
           } else if (error && error.code === "auth/popup-blocked") {
-            msg = "Всплывающее окно заблокировано браузером. Пожалуйста, разрешите всплывающие окна.";
+            msg = t.authPopupBlocked || "Всплывающее окно заблокировано браузером. Пожалуйста, разрешите всплывающие окна.";
+          } else if (error && (error.code === "auth/popup-closed-by-user" || error.code === "auth/cancelled-popup-request")) {
+            msg = t.authPopupClosed || "Окно авторизации было закрыто до завершения входа. Пожалуйста, попробуйте снова.";
           }
           errorBox.textContent = msg;
           errorBox.hidden = false;
