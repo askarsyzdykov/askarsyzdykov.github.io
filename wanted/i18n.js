@@ -167,6 +167,8 @@
       authPopupBlocked: "Всплывающее окно заблокировано браузером. Пожалуйста, разрешите всплывающие окна или продолжите вход.",
       authUnauthorizedDomain: "Домен не разрешен в настройках Firebase Authentication.",
       authRedirecting: "Перенаправление на страницу входа...",
+      authInAppBrowserHint: "Вы открыли сайт внутри приложения (Telegram, Instagram и др.). Для успешного входа рекомендуем открыть сайт в Safari или Chrome (через меню ⋮ или «Поделиться»).",
+      authInAppBrowserError: "Встроенный браузер приложения заблокировал вход. Пожалуйста, откройте сайт в Safari или Chrome.",
       validation: "Проверьте обязательные поля.",
 
       // Nearby dialogs
@@ -414,6 +416,8 @@
       authPopupBlocked: "Браузер қалқымалы терезені бұғаттады. Қалқымалы терезелерге рұқсат беріңіз.",
       authUnauthorizedDomain: "Доменге Firebase Authentication арқылы рұқсат берілмеген.",
       authRedirecting: "Кіру бетіне бағытталуда...",
+      authInAppBrowserHint: "Сайт қосымша ішінде ашылған (Telegram, Instagram т.б.). Жүйеге кіру үшін сайтты Safari немесе Chrome браузерінде ашуды ұсынамыз.",
+      authInAppBrowserError: "Қосымшаның ішкі браузері кіруді бұғаттады. Сайтты Safari немесе Chrome арқылы ашыңыз.",
       validation: "Міндетті өрістерді тексеріңіз.",
 
       // Nearby dialogs
@@ -661,6 +665,8 @@
       authPopupBlocked: "Pop-up window was blocked by the browser. Please allow pop-ups or continue.",
       authUnauthorizedDomain: "Domain is not authorized in Firebase Authentication settings.",
       authRedirecting: "Redirecting to sign-in...",
+      authInAppBrowserHint: "You opened the site inside an app (Telegram, Instagram, etc.). For seamless sign-in, please open in Safari or Chrome (via ⋮ or Share menu).",
+      authInAppBrowserError: "The in-app browser blocked sign-in. Please open the site in Safari or Chrome.",
       validation: "Check the required fields.",
 
       // Nearby dialogs
