@@ -56,7 +56,7 @@
 
   function checkIsAuthor(item) {
     if (!item) return false;
-    return Boolean(item.isAuthor);
+    return Boolean(item.is_author);
   }
 
   function pluralVotes(count) {
@@ -76,14 +76,14 @@
   }
 
   function getProposalShareData(item) {
-    var votesCount = (item && item.votesCount != null) ? item.votesCount : 0;
+    var votesCount = (item && item.votes_count != null) ? item.votes_count : 0;
     var url = location.origin + "/wanted/" + encodeURIComponent(item.id);
-    var isSite = item && item.sourceType === "site_offer";
+    var isSite = item && item.source_type === "site_offer";
     var template = isSite
       ? ((t && t.shareSiteTextTemplate) || "Здесь предлагают установить зарядную станцию для электромобилей.\nЕсли вам тоже нужна зарядка в этом месте — поддержите локацию своим голосом в evPoint.\nУже проголосовали: {votes_count} чел.")
       : ((t && t.shareTextTemplate) || "Предлагаю установить зарядную станцию для электромобилей в этом месте.\nУже проголосовали: {votes_count} чел.\nЕсли вам тоже нужна зарядка здесь — поддержите место своим голосом в evPoint:");
     var text = template.replace("{votes_count}", votesCount);
-    var label = (isSite && item.siteName) ? (item.siteName + " (" + (item.placeLabel || "") + ")") : item.placeLabel;
+    var label = (isSite && item.site_name) ? (item.site_name + " (" + (item.place_label || "") + ")") : item.place_label;
     var title = label ? (label + " | evPoint.kz") : "evPoint.kz";
     return { title: title, text: text, url: url };
   }
@@ -91,7 +91,7 @@
   function sanitizeAnalyticsData(data) {
     data = data || {};
     var sanitized = {};
-    var allowedKeys = ["proposal_id", "sourceType", "locationType", "powerStatus", "preferredChargerType", "count"];
+    var allowedKeys = ["proposal_id", "source_type", "location_type", "power_status", "preferred_charger_type", "count"];
     for (var key in data) {
       if (allowedKeys.indexOf(key) >= 0 && data[key] !== undefined) {
         sanitized[key] = data[key];
@@ -115,10 +115,10 @@
   function shareProposal(item) {
     track("wanted_share", {
       proposal_id: item.id,
-      sourceType: item.sourceType || "driver_demand",
-      locationType: item.locationType,
-      powerStatus: item.powerStatus,
-      preferredChargerType: item.preferredChargerType
+      source_type: item.source_type || "driver_demand",
+      location_type: item.location_type,
+      power_status: item.power_status,
+      preferred_charger_type: item.preferred_charger_type
     });
     var shareData = getProposalShareData(item);
     var fullText = shareData.text + "\n" + shareData.url;
@@ -289,8 +289,8 @@
       '" ' + (checked ? "checked" : "") + '><span>' + label + "</span></label>";
   }
 
-  function sourceBadge(sourceType) {
-    var isSite = sourceType === "site_offer";
+  function sourceBadge(source_type) {
+    var isSite = source_type === "site_offer";
     return '<span class="source-badge ' + (isSite ? 'source-badge-site' : 'source-badge-driver') + '">' +
       esc(isSite ? (t.badgeSiteOffer || "Площадка от бизнеса") : (t.badgeDriverDemand || "Нужна зарядка")) +
       '</span>';
@@ -382,7 +382,7 @@
   }
 
   function markerOptions(item, map) {
-    var isSite = item && item.sourceType === "site_offer";
+    var isSite = item && item.source_type === "site_offer";
     var markerSvg = isSite
       ? '<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44">' +
         '<circle cx="22" cy="22" r="11" fill="#007aff" stroke="#ffffff" stroke-width="3"/>' +
@@ -392,7 +392,7 @@
         '<circle cx="22" cy="22" r="10" fill="#EA6035" stroke="#ffffff" stroke-width="3"/>' +
         '</svg>';
 
-    var title = (isSite && item.siteName) ? (item.siteName + " · " + (item.placeLabel || "")) : (item.placeLabel || t.placeStep);
+    var title = (isSite && item.site_name) ? (item.site_name + " · " + (item.place_label || "")) : (item.place_label || t.placeStep);
     return {
       map: map,
       position: { lat: item.location.latitude, lng: item.location.longitude },
@@ -444,38 +444,38 @@
   }
 
   function card(item) {
-    var isSite = item.sourceType === "site_offer";
-    var title = isSite ? (item.siteName || item.placeLabel) : item.placeLabel;
-    var chargerLabel = (!isSite && item.chargerType && item.chargerType !== "unknown" && (t.chargers[item.chargerType] || item.chargerType))
-      ? (t.chargers[item.chargerType] || item.chargerType)
+    var isSite = item.source_type === "site_offer";
+    var title = isSite ? (item.site_name || item.place_label) : item.place_label;
+    var chargerLabel = (!isSite && item.charger_type && item.charger_type !== "unknown" && (t.chargers[item.charger_type] || item.charger_type))
+      ? (t.chargers[item.charger_type] || item.charger_type)
       : "";
     var placeInfo = isSite
-      ? (esc(item.placeLabel) + " · " + esc(t.locations[item.locationType] || item.locationType))
-      : (esc(t.locations[item.locationType] || item.locationType) + (chargerLabel ? " · " + esc(chargerLabel) : ""));
+      ? (esc(item.place_label) + " · " + esc(t.locations[item.location_type] || item.location_type))
+      : (esc(t.locations[item.location_type] || item.location_type) + (chargerLabel ? " · " + esc(chargerLabel) : ""));
 
     return '<article class="proposal-card"><div class="card-top">' +
       '<div style="display:flex;align-items:center;gap:6px">' +
       statusPill(item.status) +
-      sourceBadge(item.sourceType) +
+      sourceBadge(item.source_type) +
       '</div>' +
-      "<strong>" + item.votesCount + " " + esc(pluralVotes(item.votesCount)) + "</strong></div><h3>" +
+      "<strong>" + item.votes_count + " " + esc(pluralVotes(item.votes_count)) + "</strong></div><h3>" +
       esc(title) + "</h3><p>" + placeInfo + '</p><a href="/wanted/' +
       encodeURIComponent(item.id) + '">' + t.open + " →</a></article>";
   }
 
   function sheetCard(item) {
-    var isSite = item.sourceType === "site_offer";
-    var title = isSite ? (item.siteName || item.placeLabel) : item.placeLabel;
+    var isSite = item.source_type === "site_offer";
+    var title = isSite ? (item.site_name || item.place_label) : item.place_label;
     var isAuthor = checkIsAuthor(item);
-    var hasVoted = Boolean(item.viewerHasVoted || (isAuthor && !isSite));
+    var hasVoted = Boolean(item.viewer_has_voted || (isAuthor && !isSite));
     var chevronSvg = '<svg class="sheet-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>';
     var shareSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>';
-    var chargerLabel = (!isSite && item.chargerType && item.chargerType !== "unknown" && (t.chargers[item.chargerType] || item.chargerType))
-      ? (t.chargers[item.chargerType] || item.chargerType)
+    var chargerLabel = (!isSite && item.charger_type && item.charger_type !== "unknown" && (t.chargers[item.charger_type] || item.charger_type))
+      ? (t.chargers[item.charger_type] || item.charger_type)
       : "";
     var placeInfo = isSite
-      ? (esc(item.placeLabel) + " · " + esc(t.locations[item.locationType] || item.locationType))
-      : (esc(t.locations[item.locationType] || item.locationType) + (chargerLabel ? " · " + esc(chargerLabel) : ""));
+      ? (esc(item.place_label) + " · " + esc(t.locations[item.location_type] || item.location_type))
+      : (esc(t.locations[item.location_type] || item.location_type) + (chargerLabel ? " · " + esc(chargerLabel) : ""));
 
     var voteBtnText = isAuthor && !isSite
       ? ("✓ " + t.youAuthor)
@@ -484,14 +484,14 @@
     var voteBtnAttr = (isAuthor && !isSite) ? ' disabled title="' + esc(t.cantRemoveAuthorVote) + '"' : '';
 
     return '<article class="sheet-proposal">' +
-      '<div style="margin-bottom:8px">' + sourceBadge(item.sourceType) + '</div>' +
+      '<div style="margin-bottom:8px">' + sourceBadge(item.source_type) + '</div>' +
       '<h3><a class="sheet-title-link" href="/wanted/' + encodeURIComponent(item.id) + '">' +
       '<span>' + esc(title) + '</span>' + chevronSvg + '</a></h3>' +
       '<p class="sheet-place-info">' + placeInfo + '</p>' +
       '<div class="sheet-vote-row">' +
       '<div class="sheet-vote-count">' +
-      '<strong class="sheet-votes-num">' + item.votesCount + '</strong> ' +
-      '<span class="sheet-votes-label">' + esc(pluralVotes(item.votesCount)) + '</span>' +
+      '<strong class="sheet-votes-num">' + item.votes_count + '</strong> ' +
+      '<span class="sheet-votes-label">' + esc(pluralVotes(item.votes_count)) + '</span>' +
       '</div>' +
       '<button type="button" class="' + voteBtnClass + '" id="sheet-vote-btn"' + voteBtnAttr + '>' +
       voteBtnText +
@@ -728,52 +728,52 @@
       if (voteBtn) {
         voteBtn.onclick = function (e) {
           e.preventDefault();
-          var isSite = item.sourceType === "site_offer";
+          var isSite = item.source_type === "site_offer";
           if (checkIsAuthor(item) && !isSite) return;
           ensureAuth(function (session) {
             if (session && session.user) currentSessionUser = session.user;
             if (checkIsAuthor(item) && !isSite) {
-              item.isAuthor = true;
-              item.viewerHasVoted = true;
+              item.is_author = true;
+              item.viewer_has_voted = true;
               voteBtn.textContent = "✓ " + t.youAuthor;
               voteBtn.classList.add("voted", "is-author");
               voteBtn.disabled = true;
               voteBtn.title = t.cantRemoveAuthorVote;
               return;
             }
-            var target = !item.viewerHasVoted;
+            var target = !item.viewer_has_voted;
             voteBtn.disabled = true;
             WantedApi.vote(item.id, target).then(function (updated) {
-              item.votesCount = updated.votesCount;
-              item.viewerHasVoted = updated.viewerHasVoted;
-              if (updated && updated.isAuthor) item.isAuthor = true;
+              item.votes_count = updated.votes_count;
+              item.viewer_has_voted = updated.viewer_has_voted;
+              if (updated && updated.is_author) item.is_author = true;
               var inList = items.find(function (x) { return x.id === item.id; });
               if (inList) {
-                inList.votesCount = updated.votesCount;
-                inList.viewerHasVoted = updated.viewerHasVoted;
-                if (item.isAuthor) inList.isAuthor = true;
+                inList.votes_count = updated.votes_count;
+                inList.viewer_has_voted = updated.viewer_has_voted;
+                if (item.is_author) inList.is_author = true;
                 draw();
               }
               var countEl = sheetContent.querySelector(".sheet-votes-num");
               var labelEl = sheetContent.querySelector(".sheet-votes-label");
-              if (countEl) countEl.textContent = item.votesCount;
-              if (labelEl) labelEl.textContent = pluralVotes(item.votesCount);
+              if (countEl) countEl.textContent = item.votes_count;
+              if (labelEl) labelEl.textContent = pluralVotes(item.votes_count);
               if (checkIsAuthor(item) && !isSite) {
                 voteBtn.textContent = "✓ " + t.youAuthor;
                 voteBtn.classList.add("voted", "is-author");
                 voteBtn.disabled = true;
                 voteBtn.title = t.cantRemoveAuthorVote;
               } else {
-                voteBtn.textContent = item.viewerHasVoted ? "✓ " + t.supported : (t.addVote || t.support);
-                voteBtn.classList.toggle("voted", item.viewerHasVoted);
+                voteBtn.textContent = item.viewer_has_voted ? "✓ " + t.supported : (t.addVote || t.support);
+                voteBtn.classList.toggle("voted", item.viewer_has_voted);
                 voteBtn.disabled = false;
               }
-              track(item.viewerHasVoted ? "wanted_vote" : "wanted_vote_cancel", {
+              track(item.viewer_has_voted ? "wanted_vote" : "wanted_vote_cancel", {
                 proposal_id: item.id,
-                sourceType: item.sourceType || "driver_demand",
-                locationType: item.locationType,
-                powerStatus: item.powerStatus,
-                preferredChargerType: item.preferredChargerType
+                source_type: item.source_type || "driver_demand",
+                location_type: item.location_type,
+                power_status: item.power_status,
+                preferred_charger_type: item.preferred_charger_type
               });
             }).catch(function (err) {
               voteBtn.disabled = false;
@@ -784,18 +784,18 @@
 
         WantedApi.getVote(item.id).then(function (res) {
           if (res) {
-            if (res.isAuthor) item.isAuthor = true;
-            var isSite = item.sourceType === "site_offer";
+            if (res.is_author) item.is_author = true;
+            var isSite = item.source_type === "site_offer";
             var isAuthor = checkIsAuthor(item);
             if (isAuthor && !isSite) {
-              item.viewerHasVoted = true;
+              item.viewer_has_voted = true;
               voteBtn.textContent = "✓ " + t.youAuthor;
               voteBtn.classList.add("voted", "is-author");
               voteBtn.disabled = true;
               voteBtn.title = t.cantRemoveAuthorVote;
-            } else if (res.voted != null || res.viewerHasVoted != null || res.hasVoted != null) {
-              var hasVoted = Boolean(res.voted || res.viewerHasVoted || res.hasVoted);
-              item.viewerHasVoted = hasVoted;
+            } else if (res.voted != null || res.viewer_has_voted != null || res.hasVoted != null) {
+              var hasVoted = Boolean(res.voted || res.viewer_has_voted || res.hasVoted);
+              item.viewer_has_voted = hasVoted;
               voteBtn.textContent = hasVoted ? "✓ " + t.supported : (t.addVote || t.support);
               voteBtn.classList.toggle("voted", hasVoted);
             }
@@ -866,7 +866,7 @@
       }
 
       document.getElementById("results").innerHTML = items.length
-        ? items.slice().sort(function (a, b) { return b.votesCount - a.votesCount; }).slice(0, 8).map(card).join("")
+        ? items.slice().sort(function (a, b) { return b.votes_count - a.votes_count; }).slice(0, 8).map(card).join("")
         : '<div class="empty"><button type="button" class="empty-add-btn" aria-label="' + esc(t.propose) + '">＋</button><p>' + esc(t.empty) + "</p></div>";
     }
 
@@ -891,7 +891,7 @@
 
     function load() {
       var number = ++requestNumber;
-      var filters = currentSourceFilter ? { sourceType: currentSourceFilter } : {};
+      var filters = currentSourceFilter ? { source_type: currentSourceFilter } : {};
       setProgress(true);
       WantedApi.list(boundsForRequest(), filters).then(function (response) {
         if (number !== requestNumber) return;
@@ -1077,7 +1077,7 @@
       if (selectDriver) {
         selectDriver.onclick = function () {
           selectedSource = "driver_demand";
-          track("wanted_source_selected", { sourceType: "driver_demand" });
+          track("wanted_source_selected", { source_type: "driver_demand" });
           currentStep = 1;
           renderShell();
         };
@@ -1086,7 +1086,7 @@
       if (selectSite) {
         selectSite.onclick = function () {
           selectedSource = "site_offer";
-          track("wanted_source_selected", { sourceType: "site_offer" });
+          track("wanted_source_selected", { source_type: "site_offer" });
           currentStep = 1;
           renderShell();
         };
@@ -1551,38 +1551,38 @@
 
           if (type === "site_offer") {
             payloadInput = {
-              sourceType: "site_offer",
+              source_type: "site_offer",
               location: { latitude: point.latitude, longitude: point.longitude },
-              placeLabel: rawPlaceLabel || state.siteName || (t.locations[state.locationType] || t.placeStep),
-              locationType: state.locationType,
-              siteName: state.siteName,
-              siteRole: state.siteRole,
-              representativeConfirmed: state.representativeConfirmed,
-              parkingSpacesAvailable: state.parkingSpacesAvailable,
-              siteAccess: state.siteAccess,
-              powerStatus: state.powerStatus,
-              preferredChargerType: state.preferredChargerType || "unknown",
-              cooperationTypes: state.cooperationTypes,
-              contactName: state.contactName,
-              contactPhone: state.contactPhone,
-              contactEmail: state.contactEmail || undefined,
-              authorComment: state.authorCommentSite || undefined
+              place_label: rawPlaceLabel || state.siteName || (t.locations[state.locationType] || t.placeStep),
+              location_type: state.locationType,
+              site_name: state.siteName,
+              site_role: state.siteRole,
+              representative_confirmed: state.representativeConfirmed,
+              parking_spaces_available: state.parkingSpacesAvailable,
+              site_access: state.siteAccess,
+              power_status: state.powerStatus,
+              preferred_charger_type: state.preferredChargerType || "unknown",
+              cooperation_types: state.cooperationTypes,
+              contact_name: state.contactName,
+              contact_phone: state.contactPhone,
+              contact_email: state.contactEmail || undefined,
+              author_comment: state.authorCommentSite || undefined
             };
             if (state.powerStatus === "available" && state.availablePower) {
-              payloadInput.availablePower = state.availablePower;
+              payloadInput.available_power = state.availablePower;
             }
           } else {
             payloadInput = {
-              sourceType: "driver_demand",
+              source_type: "driver_demand",
               location: { latitude: point.latitude, longitude: point.longitude },
-              placeLabel: rawPlaceLabel || (t.locations[state.locationType] || t.placeStep),
-              locationType: state.locationType,
+              place_label: rawPlaceLabel || (t.locations[state.locationType] || t.placeStep),
+              location_type: state.locationType,
               reason: state.reason,
               frequency: "unspecified",
-              chargerType: state.chargerType,
+              charger_type: state.chargerType,
               connectors: state.connectors,
-              authorComment: state.authorCommentDriver,
-              authorName: authorName
+              author_comment: state.authorCommentDriver,
+              author_name: authorName
             };
           }
 
@@ -1596,7 +1596,7 @@
 
           submitBtn.disabled = true;
 
-          WantedApi.nearby(checked.value, checked.value.sourceType).then(function (response) {
+          WantedApi.nearby(checked.value, checked.value.source_type).then(function (response) {
             var items = (response && response.items) || [];
             if (!items.length) {
               return publish(checked.value, type);
@@ -1609,12 +1609,12 @@
             var dupActions = document.getElementById("dup-actions");
             var dupCard = document.getElementById("duplicate-card");
 
-            var action = item.duplicateAction;
+            var action = item.duplicate_action;
             if (!action) {
               if (type === "driver_demand") {
-                action = item.sourceType === "site_offer" ? "support_site_offer" : "vote_existing_demand";
+                action = item.source_type === "site_offer" ? "support_site_offer" : "vote_existing_demand";
               } else {
-                action = item.sourceType === "site_offer" ? "verify_same_site" : "create_and_match_demand";
+                action = item.source_type === "site_offer" ? "verify_same_site" : "create_and_match_demand";
               }
             }
 
@@ -1699,7 +1699,7 @@
       var isSite = type === "site_offer";
       var title = isSite ? (t.thankYouSiteTitle || t.thankYouTitle) : t.thankYouTitle;
       var text = isSite ? (t.thankYouSiteText || t.thankYouText) : t.thankYouText;
-      var placeName = isSite && item.siteName ? (item.siteName + " · " + item.placeLabel) : item.placeLabel;
+      var placeName = isSite && item.site_name ? (item.site_name + " · " + item.place_label) : item.place_label;
 
       var dialogHtml = '<dialog id="created-dialog" class="created-modal">' +
         '<div class="dialog-body created-dialog-body">' +
@@ -1776,26 +1776,26 @@
       WantedApi.create(value).then(function (item) {
         if (type === "site_offer") {
           track("wanted_created", {
-            sourceType: "site_offer",
-            locationType: item.locationType,
-            powerStatus: item.powerStatus,
-            preferredChargerType: item.preferredChargerType
+            source_type: "site_offer",
+            location_type: item.location_type,
+            power_status: item.power_status,
+            preferred_charger_type: item.preferred_charger_type
           });
           track("wanted_site_offer_created", {
-            sourceType: "site_offer",
-            locationType: item.locationType,
-            powerStatus: item.powerStatus,
-            preferredChargerType: item.preferredChargerType
+            source_type: "site_offer",
+            location_type: item.location_type,
+            power_status: item.power_status,
+            preferred_charger_type: item.preferred_charger_type
           });
         } else {
           track("wanted_created", {
-            sourceType: "driver_demand",
-            locationType: item.locationType
+            source_type: "driver_demand",
+            location_type: item.location_type
           });
           track("wanted_create_success", {
             proposal_id: item.id,
-            sourceType: "driver_demand",
-            locationType: item.locationType
+            source_type: "driver_demand",
+            location_type: item.location_type
           });
         }
         openCreatedModal(item, type);
@@ -1823,33 +1823,33 @@
         return;
       }
 
-      var isSite = item.sourceType === "site_offer";
+      var isSite = item.source_type === "site_offer";
 
       if (!loadSavedMapState() && item.location && Number.isFinite(item.location.latitude) && Number.isFinite(item.location.longitude)) {
         saveMapState(item.location.latitude, item.location.longitude, 14);
       }
 
       var isAuthor = checkIsAuthor(item);
-      if (isAuthor && !isSite) item.viewerHasVoted = true;
+      if (isAuthor && !isSite) item.viewer_has_voted = true;
 
       track("wanted_proposal_open", {
         proposal_id: id,
-        sourceType: item.sourceType || "driver_demand",
-        locationType: item.locationType,
-        powerStatus: item.powerStatus,
-        preferredChargerType: item.preferredChargerType
+        source_type: item.source_type || "driver_demand",
+        location_type: item.location_type,
+        power_status: item.power_status,
+        preferred_charger_type: item.preferred_charger_type
       });
 
-      var titleText = isSite && item.siteName ? item.siteName : item.placeLabel;
-      document.title = titleText + " — " + item.votesCount + " " + esc(pluralVotes(item.votesCount)) + " | evPoint.kz";
-      var description = titleText + " · " + item.votesCount + " " + pluralVotes(item.votesCount) + ". " + (item.reason || item.authorComment || "");
+      var titleText = isSite && item.site_name ? item.site_name : item.place_label;
+      document.title = titleText + " — " + item.votes_count + " " + esc(pluralVotes(item.votes_count)) + " | evPoint.kz";
+      var description = titleText + " · " + item.votes_count + " " + pluralVotes(item.votes_count) + ". " + (item.reason || item.author_comment || "");
       document.querySelector('meta[name="description"]')?.setAttribute("content", description);
       document.querySelector('meta[property="og:title"]')?.setAttribute("content", document.title);
       document.querySelector('meta[property="og:description"]')?.setAttribute("content", description);
 
       var authorName = isSite
         ? (t.badgeSiteOffer || "Площадка от бизнеса")
-        : (item.authorName || t.driver || "Водитель");
+        : (item.author_name || t.driver || "Водитель");
       var authorSvg = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
       var authorHtml = '<span class="author-tag">' + authorSvg + '<span>' + esc(authorName) + '</span></span>';
       var shareSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>';
@@ -1857,35 +1857,35 @@
       var detailsListHtml = "";
       if (isSite) {
         var siteParts = [];
-        if (item.placeLabel) {
-          siteParts.push('<div><dt>' + esc(t.address) + '</dt><dd>' + esc(item.placeLabel) + '</dd></div>');
+        if (item.place_label) {
+          siteParts.push('<div><dt>' + esc(t.address) + '</dt><dd>' + esc(item.place_label) + '</dd></div>');
         }
-        if (item.locationType) {
-          siteParts.push('<div><dt>' + esc(t.locationStep) + '</dt><dd>' + esc(t.locations[item.locationType] || item.locationType) + '</dd></div>');
+        if (item.location_type) {
+          siteParts.push('<div><dt>' + esc(t.locationStep) + '</dt><dd>' + esc(t.locations[item.location_type] || item.location_type) + '</dd></div>');
         }
-        if (item.parkingSpacesAvailable) {
-          siteParts.push('<div><dt>' + esc(t.parkingSpacesDetail) + '</dt><dd>' + esc((t.parkingSpaces && t.parkingSpaces[item.parkingSpacesAvailable]) || item.parkingSpacesAvailable) + '</dd></div>');
+        if (item.parking_spaces_available) {
+          siteParts.push('<div><dt>' + esc(t.parkingSpacesDetail) + '</dt><dd>' + esc((t.parkingSpaces && t.parkingSpaces[item.parking_spaces_available]) || item.parking_spaces_available) + '</dd></div>');
         }
-        if (item.siteAccess) {
-          siteParts.push('<div><dt>' + esc(t.siteAccessDetail) + '</dt><dd>' + esc((t.siteAccesses && t.siteAccesses[item.siteAccess]) || item.siteAccess) + '</dd></div>');
+        if (item.site_access) {
+          siteParts.push('<div><dt>' + esc(t.siteAccessDetail) + '</dt><dd>' + esc((t.siteAccesses && t.siteAccesses[item.site_access]) || item.site_access) + '</dd></div>');
         }
-        if (item.powerStatus) {
-          siteParts.push('<div><dt>' + esc(t.powerStatusDetail) + '</dt><dd>' + esc((t.powerStatuses && t.powerStatuses[item.powerStatus]) || item.powerStatus) + '</dd></div>');
+        if (item.power_status) {
+          siteParts.push('<div><dt>' + esc(t.powerStatusDetail) + '</dt><dd>' + esc((t.powerStatuses && t.powerStatuses[item.power_status]) || item.power_status) + '</dd></div>');
         }
-        if (item.availablePower) {
-          siteParts.push('<div><dt>' + esc(t.availablePowerDetail) + '</dt><dd>' + esc((t.availablePowers && t.availablePowers[item.availablePower]) || item.availablePower) + '</dd></div>');
+        if (item.available_power) {
+          siteParts.push('<div><dt>' + esc(t.availablePowerDetail) + '</dt><dd>' + esc((t.availablePowers && t.availablePowers[item.available_power]) || item.available_power) + '</dd></div>');
         }
-        if (item.preferredChargerType && item.preferredChargerType !== "unknown") {
-          siteParts.push('<div><dt>' + esc(t.preferredChargerDetail) + '</dt><dd>' + esc((t.preferredChargers && t.preferredChargers[item.preferredChargerType]) || item.preferredChargerType) + '</dd></div>');
+        if (item.preferred_charger_type && item.preferred_charger_type !== "unknown") {
+          siteParts.push('<div><dt>' + esc(t.preferredChargerDetail) + '</dt><dd>' + esc((t.preferredChargers && t.preferredChargers[item.preferred_charger_type]) || item.preferred_charger_type) + '</dd></div>');
         }
-        if (item.authorComment) {
-          siteParts.push('<div style="grid-column:1/-1"><dt>' + esc(t.comment) + '</dt><dd>' + esc(item.authorComment) + '</dd></div>');
+        if (item.author_comment) {
+          siteParts.push('<div style="grid-column:1/-1"><dt>' + esc(t.comment) + '</dt><dd>' + esc(item.author_comment) + '</dd></div>');
         }
         detailsListHtml = '<dl>' + siteParts.join("") + '</dl>';
       } else {
         var preferredParts = [];
-        if (item.chargerType && item.chargerType !== "unknown") {
-          preferredParts.push(esc(t.chargers[item.chargerType] || item.chargerType));
+        if (item.charger_type && item.charger_type !== "unknown") {
+          preferredParts.push(esc(t.chargers[item.charger_type] || item.charger_type));
         }
         if (item.connectors && item.connectors.length) {
           preferredParts.push(esc(item.connectors.join(", ")));
@@ -1897,14 +1897,14 @@
         detailsListHtml = '<dl><div><dt>' + t.reason + "</dt><dd>" +
           esc(item.reason) + "</dd></div>" +
           preferredHtml +
-          (item.authorComment ? ('<div style="grid-column:1/-1"><dt>' + esc(t.comment) + '</dt><dd>' + esc(item.authorComment) + '</dd></div>') : '') +
+          (item.author_comment ? ('<div style="grid-column:1/-1"><dt>' + esc(t.comment) + '</dt><dd>' + esc(item.author_comment) + '</dd></div>') : '') +
           '</dl>';
       }
 
       var voteBtnText = (isAuthor && !isSite)
         ? ("✓ " + t.youAuthor)
-        : (item.viewerHasVoted ? ("✓ " + t.supported) : (isSite ? t.siteOfferCta : t.support));
-      var voteBtnClass = "primary" + (item.viewerHasVoted ? " voted" : "") + ((isAuthor && !isSite) ? " is-author" : "");
+        : (item.viewer_has_voted ? ("✓ " + t.supported) : (isSite ? t.siteOfferCta : t.support));
+      var voteBtnClass = "primary" + (item.viewer_has_voted ? " voted" : "") + ((isAuthor && !isSite) ? " is-author" : "");
       var voteBtnAttr = (isAuthor && !isSite) ? ' disabled title="' + esc(t.cantRemoveAuthorVote) + '"' : '';
 
       var siteBannerHtml = isSite
@@ -1914,15 +1914,15 @@
       root.innerHTML = '<main class="page detail-page">' + header(true) +
         '<section class="detail-grid"><div><div id="detail-map" class="detail-map"></div>' +
         '<article class="panel detail-card"><div class="card-top">' +
-        '<div style="display:flex;align-items:center;gap:8px">' + authorHtml + sourceBadge(item.sourceType) + '</div>' +
-        "<span>" + new Intl.DateTimeFormat(lang, { dateStyle: "medium" }).format(new Date(item.createdAt)) +
+        '<div style="display:flex;align-items:center;gap:8px">' + authorHtml + sourceBadge(item.source_type) + '</div>' +
+        "<span>" + new Intl.DateTimeFormat(lang, { dateStyle: "medium" }).format(new Date(item.created_at)) +
         "</span></div><h1>" + esc(titleText) + '</h1><p class="category">' +
-        esc(t.locations[item.locationType]) + '</p>' +
+        esc(t.locations[item.location_type]) + '</p>' +
         detailsListHtml +
         '</article></div><aside><section class="panel vote-panel">' +
         siteBannerHtml +
-        '<div class="vote-count"><strong id="vote-count">' + item.votesCount + '</strong><span id="vote-label">' +
-        esc(pluralVotes(item.votesCount)) + '</span></div><button id="vote" class="' + voteBtnClass + '"' + voteBtnAttr + '>' +
+        '<div class="vote-count"><strong id="vote-count">' + item.votes_count + '</strong><span id="vote-label">' +
+        esc(pluralVotes(item.votes_count)) + '</span></div><button id="vote" class="' + voteBtnClass + '"' + voteBtnAttr + '>' +
         voteBtnText +
         '</button><button id="share" class="secondary share-btn">' +
         shareSvg + '<span>' + t.share + '</span>' +
@@ -1931,10 +1931,10 @@
         '</section></aside></section><section class="panel comments"><h2>' + t.comments +
         '</h2><div id="comments-list">' +
         ((item.comments || []).length ? item.comments.map(function (comment) {
-          var commentAuthor = comment.authorName || t.driver || "Водитель";
+          var commentAuthor = comment.author_name || t.driver || "Водитель";
           return "<article><div class=\"card-top\"><span class=\"author-tag\">" +
             authorSvg + "<span>" + esc(commentAuthor) + "</span></span><time>" +
-            new Intl.DateTimeFormat(lang, { dateStyle: "medium" }).format(new Date(comment.createdAt)) +
+            new Intl.DateTimeFormat(lang, { dateStyle: "medium" }).format(new Date(comment.created_at)) +
             "</time></div><p>" + esc(comment.text) + "</p></article>";
         }).join("") : '<p class="hint">' + t.noComments + "</p>") +
         '</div><form id="comment-form"><label>' + t.addComment +
@@ -1947,10 +1947,10 @@
       function updateVoteButtonState(hasVoted, forceAuthor) {
         var isAuth = forceAuthor !== undefined ? Boolean(forceAuthor) : checkIsAuthor(item);
         if (isAuth && !isSite) {
-          item.isAuthor = true;
-          item.viewerHasVoted = true;
+          item.is_author = true;
+          item.viewer_has_voted = true;
         } else {
-          item.viewerHasVoted = Boolean(hasVoted);
+          item.viewer_has_voted = Boolean(hasVoted);
         }
         var voteBtn = document.getElementById("vote");
         if (voteBtn) {
@@ -1960,8 +1960,8 @@
             voteBtn.disabled = true;
             voteBtn.title = t.cantRemoveAuthorVote;
           } else {
-            voteBtn.textContent = item.viewerHasVoted ? "✓ " + t.supported : (isSite ? t.siteOfferCta : t.support);
-            voteBtn.classList.toggle("voted", item.viewerHasVoted);
+            voteBtn.textContent = item.viewer_has_voted ? "✓ " + t.supported : (isSite ? t.siteOfferCta : t.support);
+            voteBtn.classList.toggle("voted", item.viewer_has_voted);
             voteBtn.classList.remove("is-author");
             voteBtn.disabled = false;
             voteBtn.removeAttribute("title");
@@ -1971,12 +1971,12 @@
 
       WantedApi.getVote(id).then(function (res) {
         if (res) {
-          if (res.isAuthor) item.isAuthor = true;
+          if (res.is_author) item.is_author = true;
           var isAuth = checkIsAuthor(item);
           if (isAuth && !isSite) {
             updateVoteButtonState(true, true);
-          } else if (res.voted != null || res.viewerHasVoted != null || res.hasVoted != null) {
-            var hasVoted = Boolean(res.voted || res.viewerHasVoted || res.hasVoted);
+          } else if (res.voted != null || res.viewer_has_voted != null || res.hasVoted != null) {
+            var hasVoted = Boolean(res.voted || res.viewer_has_voted || res.hasVoted);
             updateVoteButtonState(hasVoted);
           }
         }
@@ -2002,23 +2002,23 @@
             updateVoteButtonState(true, true);
             return;
           }
-          var target = !item.viewerHasVoted;
+          var target = !item.viewer_has_voted;
           vote.disabled = true;
           WantedApi.vote(id, target).then(function (updated) {
-            item.votesCount = (updated && typeof updated.votesCount === "number") ? updated.votesCount : Math.max(0, item.votesCount + (target ? 1 : -1));
-            document.getElementById("vote-count").textContent = item.votesCount;
+            item.votes_count = (updated && typeof updated.votes_count === "number") ? updated.votes_count : Math.max(0, item.votes_count + (target ? 1 : -1));
+            document.getElementById("vote-count").textContent = item.votes_count;
             var labelEl = document.getElementById("vote-label");
-            if (labelEl) labelEl.textContent = pluralVotes(item.votesCount);
-            var hasVoted = updated && updated.viewerHasVoted != null ? Boolean(updated.viewerHasVoted) : target;
-            if (updated && updated.isAuthor) item.isAuthor = true;
+            if (labelEl) labelEl.textContent = pluralVotes(item.votes_count);
+            var hasVoted = updated && updated.viewer_has_voted != null ? Boolean(updated.viewer_has_voted) : target;
+            if (updated && updated.is_author) item.is_author = true;
             updateVoteButtonState(hasVoted);
             vote.disabled = checkIsAuthor(item) && !isSite;
             track(hasVoted ? "wanted_vote" : "wanted_vote_cancel", {
               proposal_id: id,
-              sourceType: item.sourceType || "driver_demand",
-              locationType: item.locationType,
-              powerStatus: item.powerStatus,
-              preferredChargerType: item.preferredChargerType
+              source_type: item.source_type || "driver_demand",
+              location_type: item.location_type,
+              power_status: item.power_status,
+              preferred_charger_type: item.preferred_charger_type
             });
           }).catch(function (err) {
             vote.disabled = false;
@@ -2100,33 +2100,33 @@
 
       var sorted = userItems.slice().sort(function (a, b) {
         if (sortMode === "votes_desc") {
-          return (b.votesCount || 0) - (a.votesCount || 0);
+          return (b.votes_count || 0) - (a.votes_count || 0);
         } else if (sortMode === "date_asc") {
-          return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
+          return new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
         } else {
-          return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+          return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
         }
       });
 
       var shareSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>';
 
       container.innerHTML = '<div class="my-proposals-grid">' + sorted.map(function (item) {
-        var isSite = item.sourceType === "site_offer";
-        var title = isSite ? (item.siteName || item.placeLabel) : item.placeLabel;
-        var chargerLabel = (!isSite && item.chargerType && item.chargerType !== "unknown" && (t.chargers[item.chargerType] || item.chargerType)) ? (t.chargers[item.chargerType] || item.chargerType) : "";
+        var isSite = item.source_type === "site_offer";
+        var title = isSite ? (item.site_name || item.place_label) : item.place_label;
+        var chargerLabel = (!isSite && item.charger_type && item.charger_type !== "unknown" && (t.chargers[item.charger_type] || item.charger_type)) ? (t.chargers[item.charger_type] || item.charger_type) : "";
         var placeInfo = isSite
-          ? (esc(item.placeLabel) + " · " + esc(t.locations[item.locationType] || item.locationType))
-          : (esc(t.locations[item.locationType] || item.locationType) + (chargerLabel ? " · " + esc(chargerLabel) : ""));
-        var dateStr = item.createdAt ? new Intl.DateTimeFormat(lang, { dateStyle: "medium" }).format(new Date(item.createdAt)) : "";
+          ? (esc(item.place_label) + " · " + esc(t.locations[item.location_type] || item.location_type))
+          : (esc(t.locations[item.location_type] || item.location_type) + (chargerLabel ? " · " + esc(chargerLabel) : ""));
+        var dateStr = item.created_at ? new Intl.DateTimeFormat(lang, { dateStyle: "medium" }).format(new Date(item.created_at)) : "";
         var description = isSite
-          ? (item.authorComment || (t.parkingSpacesDetail + ": " + ((t.parkingSpaces && t.parkingSpaces[item.parkingSpacesAvailable]) || item.parkingSpacesAvailable || "")))
+          ? (item.author_comment || (t.parkingSpacesDetail + ": " + ((t.parkingSpaces && t.parkingSpaces[item.parking_spaces_available]) || item.parking_spaces_available || "")))
           : (item.reason || "");
 
         return '<article class="proposal-card my-proposal-card">' +
           '<div class="card-top">' +
           '<div style="display:flex;align-items:center;gap:6px">' +
           statusPill(item.status) +
-          sourceBadge(item.sourceType) +
+          sourceBadge(item.source_type) +
           '</div>' +
           '<span class="my-card-date">' + esc(dateStr) + '</span>' +
           '</div>' +
@@ -2134,7 +2134,7 @@
           (description ? '<p class="my-card-reason">' + esc(description) + '</p>' : '') +
           '<p class="my-card-info">' + placeInfo + '</p>' +
           '<div class="my-card-bottom">' +
-          '<div class="my-card-votes"><strong>' + item.votesCount + '</strong> <span>' + esc(pluralVotes(item.votesCount)) + '</span></div>' +
+          '<div class="my-card-votes"><strong>' + item.votes_count + '</strong> <span>' + esc(pluralVotes(item.votes_count)) + '</span></div>' +
           '<div class="my-card-actions">' +
           '<button type="button" class="secondary share-btn my-share-btn" data-share-id="' + esc(item.id) + '" aria-label="' + esc(t.share) + '" title="' + esc(t.share) + '">' +
           shareSvg +

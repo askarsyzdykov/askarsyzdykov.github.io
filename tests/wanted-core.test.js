@@ -3,53 +3,53 @@ const assert = require("node:assert/strict");
 const core = require("../wanted/core.js");
 
 const validDriverDemand = {
-  sourceType: "driver_demand",
+  source_type: "driver_demand",
   location: { latitude: 43.2389, longitude: 76.8897 },
-  placeLabel: "Двор на Абая",
-  locationType: "residential",
+  place_label: "Двор на Абая",
+  location_type: "residential",
   reason: "Ближайшая зарядка всегда занята",
   frequency: "daily",
-  chargerType: "ac",
+  charger_type: "ac",
   connectors: ["Type 2"]
 };
 
 const validSiteOffer = {
-  sourceType: "site_offer",
+  source_type: "site_offer",
   location: { latitude: 43.2389, longitude: 76.8897 },
-  siteName: "ТРЦ Dostyk Plaza",
-  placeLabel: "ТРЦ Dostyk Plaza",
-  locationType: "mall",
-  parkingSpacesAvailable: "5_plus",
-  siteAccess: "24_7",
-  powerStatus: "available",
-  availablePower: "up_to_22",
-  preferredChargerType: "ac_dc",
-  cooperationTypes: ["provide_site", "rent"],
-  contactName: "Аскар Сыздыков",
-  contactPhone: "+7 (777) 123-45-67",
-  contactEmail: "askar@example.com",
-  siteRole: "owner",
-  representativeConfirmed: true,
-  authorComment: "Подземный паркинг, охрана 24/7"
+  site_name: "ТРЦ Dostyk Plaza",
+  place_label: "ТРЦ Dostyk Plaza",
+  location_type: "mall",
+  parking_spaces_available: "5_plus",
+  site_access: "24_7",
+  power_status: "available",
+  available_power: "up_to_22",
+  preferred_charger_type: "ac_dc",
+  cooperation_types: ["provide_site", "rent"],
+  contact_name: "Аскар Сыздыков",
+  contact_phone: "+7 (777) 123-45-67",
+  contact_email: "askar@example.com",
+  site_role: "owner",
+  representative_confirmed: true,
+  author_comment: "Подземный паркинг, охрана 24/7"
 };
 
 test("validates a complete driver_demand proposal", () => {
   const res = core.validateProposal(validDriverDemand);
   assert.equal(res.valid, true);
-  assert.equal(res.value.sourceType, "driver_demand");
+  assert.equal(res.value.source_type, "driver_demand");
 });
 
 test("defaults sourceType to driver_demand when omitted", () => {
   const input = { ...validDriverDemand };
-  delete input.sourceType;
+  delete input.source_type;
   const res = core.validateProposal(input);
   assert.equal(res.valid, true);
-  assert.equal(res.value.sourceType, "driver_demand");
+  assert.equal(res.value.source_type, "driver_demand");
 });
 
 test("validates a proposal without placeLabel for driver_demand", () => {
   const input = { ...validDriverDemand };
-  delete input.placeLabel;
+  delete input.place_label;
   assert.equal(core.validateProposal(input).valid, true);
 });
 
@@ -111,77 +111,77 @@ test("pluralizes votes correctly in Kazakh and English", () => {
 test("validates a complete site_offer proposal", () => {
   const res = core.validateProposal(validSiteOffer);
   assert.equal(res.valid, true);
-  assert.equal(res.value.sourceType, "site_offer");
-  assert.equal(res.value.placeLabel, "ТРЦ Dostyk Plaza");
-  assert.equal(res.value.representativeConfirmed, true);
-  assert.equal(res.value.preferredChargerType, "ac_dc");
-  assert.deepEqual(res.value.cooperationTypes, ["provide_site", "rent"]);
+  assert.equal(res.value.source_type, "site_offer");
+  assert.equal(res.value.place_label, "ТРЦ Dostyk Plaza");
+  assert.equal(res.value.representative_confirmed, true);
+  assert.equal(res.value.preferred_charger_type, "ac_dc");
+  assert.deepEqual(res.value.cooperation_types, ["provide_site", "rent"]);
 });
 
 test("validates site_offer without optional email or authorComment", () => {
   const input = { ...validSiteOffer };
-  delete input.contactEmail;
-  delete input.authorComment;
+  delete input.contact_email;
+  delete input.author_comment;
   const res = core.validateProposal(input);
   assert.equal(res.valid, true);
-  assert.equal(res.value.contactEmail, undefined);
-  assert.equal(res.value.authorComment, undefined);
+  assert.equal(res.value.contact_email, undefined);
+  assert.equal(res.value.author_comment, undefined);
 });
 
 test("clears availablePower for site_offer if powerStatus is not 'available'", () => {
-  const input = { ...validSiteOffer, powerStatus: "upgrade_possible", availablePower: "up_to_22" };
+  const input = { ...validSiteOffer, power_status: "upgrade_possible", available_power: "up_to_22" };
   const res = core.validateProposal(input);
   assert.equal(res.valid, true);
-  assert.equal(res.value.powerStatus, "upgrade_possible");
-  assert.equal(res.value.availablePower, undefined);
+  assert.equal(res.value.power_status, "upgrade_possible");
+  assert.equal(res.value.available_power, undefined);
 });
 
 test("rejects site_offer with missing siteName and placeLabel", () => {
-  const input = { ...validSiteOffer, siteName: "", placeLabel: "" };
+  const input = { ...validSiteOffer, site_name: "", place_label: "" };
   const res = core.validateProposal(input);
   assert.equal(res.valid, false);
-  assert.equal(res.errors.placeLabel, "required");
+  assert.equal(res.errors.place_label, "required");
 });
 
 test("rejects site_offer with missing or invalid siteRole", () => {
-  const emptyRole = { ...validSiteOffer, siteRole: "" };
-  assert.equal(core.validateProposal(emptyRole).errors.siteRole, "required");
+  const emptyRole = { ...validSiteOffer, site_role: "" };
+  assert.equal(core.validateProposal(emptyRole).errors.site_role, "required");
 
-  const invalidRole = { ...validSiteOffer, siteRole: "invalid_role" };
-  assert.equal(core.validateProposal(invalidRole).errors.siteRole, "invalid");
+  const invalidRole = { ...validSiteOffer, site_role: "invalid_role" };
+  assert.equal(core.validateProposal(invalidRole).errors.site_role, "invalid");
 });
 
 test("rejects site_offer when representativeConfirmed is not true", () => {
-  const input = { ...validSiteOffer, representativeConfirmed: false };
+  const input = { ...validSiteOffer, representative_confirmed: false };
   const res = core.validateProposal(input);
   assert.equal(res.valid, false);
-  assert.equal(res.errors.representativeConfirmed, "required");
+  assert.equal(res.errors.representative_confirmed, "required");
 });
 
 test("rejects site_offer with invalid contactPhone", () => {
-  const input = { ...validSiteOffer, contactPhone: "123" };
+  const input = { ...validSiteOffer, contact_phone: "123" };
   const res = core.validateProposal(input);
   assert.equal(res.valid, false);
-  assert.equal(res.errors.contactPhone, "invalid");
+  assert.equal(res.errors.contact_phone, "invalid");
 });
 
 test("rejects site_offer with empty cooperationTypes", () => {
-  const input = { ...validSiteOffer, cooperationTypes: [] };
+  const input = { ...validSiteOffer, cooperation_types: [] };
   const res = core.validateProposal(input);
   assert.equal(res.valid, false);
-  assert.equal(res.errors.cooperationTypes, "required");
+  assert.equal(res.errors.cooperation_types, "required");
 });
 
 test("filters map records with matches()", () => {
-  assert.equal(core.matches(validDriverDemand, { locationType: "residential", chargerType: "ac" }), true);
-  assert.equal(core.matches(validDriverDemand, { sourceType: "driver_demand" }), true);
-  assert.equal(core.matches(validDriverDemand, { sourceType: "site_offer" }), false);
-  assert.equal(core.matches(validDriverDemand, { sourceType: "all" }), true);
+  assert.equal(core.matches(validDriverDemand, { location_type: "residential", charger_type: "ac" }), true);
+  assert.equal(core.matches(validDriverDemand, { source_type: "driver_demand" }), true);
+  assert.equal(core.matches(validDriverDemand, { source_type: "site_offer" }), false);
+  assert.equal(core.matches(validDriverDemand, { source_type: "all" }), true);
 
-  assert.equal(core.matches(validSiteOffer, { sourceType: "site_offer" }), true);
-  assert.equal(core.matches(validSiteOffer, { sourceType: "driver_demand" }), false);
-  assert.equal(core.matches(validSiteOffer, { locationType: "mall" }), true);
-  assert.equal(core.matches(validSiteOffer, { sourceType: "all" }), true);
+  assert.equal(core.matches(validSiteOffer, { source_type: "site_offer" }), true);
+  assert.equal(core.matches(validSiteOffer, { source_type: "driver_demand" }), false);
+  assert.equal(core.matches(validSiteOffer, { location_type: "mall" }), true);
+  assert.equal(core.matches(validSiteOffer, { source_type: "all" }), true);
 });
 
 test("has required auth translations in all supported languages", () => {

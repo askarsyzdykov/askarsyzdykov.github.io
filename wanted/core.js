@@ -85,7 +85,7 @@
   function validateProposal(input) {
     input = input || {};
     var location = input.location || {};
-    var sourceType = clean(input.sourceType, 30);
+    var sourceType = clean(input.source_type, 30);
     if (!sourceType || SOURCE_TYPES.indexOf(sourceType) < 0) {
       sourceType = "driver_demand";
     }
@@ -98,129 +98,129 @@
       errors.coordinates = "invalid";
     }
 
-    var placeLabel = clean(input.placeLabel, 160);
+    var placeLabel = clean(input.place_label, 160);
     if (placeLabel && placeLabel.length < 2) {
-      errors.placeLabel = "invalid";
+      errors.place_label = "invalid";
     }
 
-    var locationType = clean(input.locationType, 30);
+    var locationType = clean(input.location_type, 30);
     if (LOCATION_TYPES.indexOf(locationType) < 0) {
-      errors.locationType = "invalid";
+      errors.location_type = "invalid";
     }
 
     if (sourceType === "site_offer") {
-      var siteName = clean(input.siteName || input.placeLabel, 160);
+      var siteName = clean(input.site_name || input.place_label, 160);
       if (!siteName || siteName.length < 2) {
-        errors.siteName = "required";
-        errors.placeLabel = "required";
+        errors.site_name = "required";
+        errors.place_label = "required";
       }
 
-      var siteRole = clean(input.siteRole, 40);
+      var siteRole = clean(input.site_role, 40);
       if (!siteRole) {
-        errors.siteRole = "required";
+        errors.site_role = "required";
       } else if (SITE_ROLES.indexOf(siteRole) < 0) {
-        errors.siteRole = "invalid";
+        errors.site_role = "invalid";
       }
 
-      var representativeConfirmed = Boolean(input.representativeConfirmed);
+      var representativeConfirmed = Boolean(input.representative_confirmed);
       if (representativeConfirmed !== true) {
-        errors.representativeConfirmed = "required";
+        errors.representative_confirmed = "required";
       }
 
-      var parkingSpacesAvailable = clean(input.parkingSpacesAvailable || input.parkingSpaces, 20);
+      var parkingSpacesAvailable = clean(input.parking_spaces_available, 20);
       if (!parkingSpacesAvailable) {
-        errors.parkingSpacesAvailable = "required";
+        errors.parking_spaces_available = "required";
       } else if (PARKING_SPACES.indexOf(parkingSpacesAvailable) < 0) {
-        errors.parkingSpacesAvailable = "invalid";
+        errors.parking_spaces_available = "invalid";
       }
 
-      var siteAccess = clean(input.siteAccess, 30);
+      var siteAccess = clean(input.site_access, 30);
       if (!siteAccess) {
-        errors.siteAccess = "required";
+        errors.site_access = "required";
       } else if (SITE_ACCESS.indexOf(siteAccess) < 0) {
-        errors.siteAccess = "invalid";
+        errors.site_access = "invalid";
       }
 
-      var powerStatus = clean(input.powerStatus, 30);
+      var powerStatus = clean(input.power_status, 30);
       if (!powerStatus) {
-        errors.powerStatus = "required";
+        errors.power_status = "required";
       } else if (POWER_STATUS.indexOf(powerStatus) < 0) {
-        errors.powerStatus = "invalid";
+        errors.power_status = "invalid";
       }
 
       var availablePower;
       if (powerStatus === "available") {
-        var rawPower = clean(input.availablePower, 30);
+        var rawPower = clean(input.available_power, 30);
         if (rawPower && AVAILABLE_POWER.indexOf(rawPower) >= 0) {
           availablePower = rawPower;
         } else if (rawPower) {
-          errors.availablePower = "invalid";
+          errors.available_power = "invalid";
         }
       }
 
-      var preferredChargerType = clean(input.preferredChargerType, 20);
-      if (!preferredChargerType && Array.isArray(input.preferredChargerTypes) && input.preferredChargerTypes.length > 0) {
-        preferredChargerType = clean(input.preferredChargerTypes[0], 20);
+      var preferredChargerType = clean(input.preferred_charger_type, 20);
+      if (!preferredChargerType && Array.isArray(input.preferred_charger_types) && input.preferred_charger_types.length > 0) {
+        preferredChargerType = clean(input.preferred_charger_types[0], 20);
       }
       if (!preferredChargerType) {
         preferredChargerType = "unknown";
       }
       if (PREFERRED_CHARGER_TYPES.indexOf(preferredChargerType) < 0) {
-        errors.preferredChargerType = "invalid";
+        errors.preferred_charger_type = "invalid";
       }
 
-      var rawCoop = Array.isArray(input.cooperationTypes) ? input.cooperationTypes : [];
+      var rawCoop = Array.isArray(input.cooperation_types) ? input.cooperation_types : [];
       var cooperationTypes = rawCoop
         .map(function (x) { return clean(x, 40); })
         .filter(function (x) { return COOPERATION_TYPES.indexOf(x) >= 0; });
       if (cooperationTypes.length === 0) {
-        errors.cooperationTypes = "required";
+        errors.cooperation_types = "required";
       }
 
-      var contactName = clean(input.contactName, 120);
+      var contactName = clean(input.contact_name, 120);
       if (!contactName || contactName.length < 2) {
-        errors.contactName = "required";
+        errors.contact_name = "required";
       }
 
-      var contactPhone = clean(input.contactPhone, 50);
+      var contactPhone = clean(input.contact_phone, 50);
       if (!contactPhone) {
-        errors.contactPhone = "required";
+        errors.contact_phone = "required";
       } else if (!validPhone(contactPhone)) {
-        errors.contactPhone = "invalid";
+        errors.contact_phone = "invalid";
       }
 
-      var contactEmail = clean(input.contactEmail, 120);
+      var contactEmail = clean(input.contact_email, 120);
       if (contactEmail && !validEmail(contactEmail)) {
-        errors.contactEmail = "invalid";
+        errors.contact_email = "invalid";
       }
 
-      var authorCommentSite = clean(input.authorComment, 1000);
+      var authorCommentSite = clean(input.author_comment, 1000);
 
       var siteValue = {
-        sourceType: "site_offer",
+        source_type: "site_offer",
         location: { latitude: lat, longitude: lng },
-        placeLabel: placeLabel,
-        locationType: locationType,
-        siteName: siteName,
-        siteRole: siteRole,
-        representativeConfirmed: representativeConfirmed,
-        parkingSpacesAvailable: parkingSpacesAvailable,
-        siteAccess: siteAccess,
-        powerStatus: powerStatus,
-        preferredChargerType: preferredChargerType,
-        cooperationTypes: cooperationTypes,
-        contactName: contactName,
-        contactPhone: contactPhone
+        place_label: placeLabel,
+        location_type: locationType,
+        site_name: siteName,
+        site_role: siteRole,
+        representative_confirmed: representativeConfirmed,
+        parking_spaces_available: parkingSpacesAvailable,
+        site_access: siteAccess,
+        power_status: powerStatus,
+        preferred_charger_type: preferredChargerType,
+        cooperation_types: cooperationTypes,
+        contact_name: contactName,
+        contact_phone: contactPhone
       };
 
       if (availablePower) {
-        siteValue.availablePower = availablePower;
+        siteValue.available_power = availablePower;
       }
       if (contactEmail) {
-        siteValue.contactEmail = contactEmail;
+        siteValue.contact_email = contactEmail;
       }
       if (authorCommentSite) {
-        siteValue.authorComment = authorCommentSite;
+        siteValue.author_comment = authorCommentSite;
       }
 
       return {
@@ -241,29 +241,29 @@
       errors.frequency = "invalid";
     }
 
-    var chargerType = clean(input.chargerType, 20);
+    var chargerType = clean(input.charger_type, 20);
     if (CHARGER_TYPES.indexOf(chargerType) < 0) {
-      errors.chargerType = "invalid";
+      errors.charger_type = "invalid";
     }
 
     var connectors = Array.isArray(input.connectors)
       ? input.connectors.map(function (x) { return clean(x, 24); }).filter(Boolean).slice(0, 8)
       : [];
 
-    var authorComment = clean(input.authorComment, 1000);
-    var authorName = clean(input.authorName, 120);
+    var authorComment = clean(input.author_comment, 1000);
+    var authorName = clean(input.author_name, 120);
 
     var driverValue = {
-      sourceType: "driver_demand",
+      source_type: "driver_demand",
       location: { latitude: lat, longitude: lng },
-      placeLabel: placeLabel,
-      locationType: locationType,
+      place_label: placeLabel,
+      location_type: locationType,
       reason: reason,
       frequency: frequency,
-      chargerType: chargerType,
+      charger_type: chargerType,
       connectors: connectors,
-      authorComment: authorComment,
-      authorName: authorName
+      author_comment: authorComment,
+      author_name: authorName
     };
 
     return {
@@ -303,12 +303,16 @@
   }
 
   function matches(item, filters) {
-    var itemSource = item.sourceType || "driver_demand";
-    var sourceOk = !filters.sourceType || filters.sourceType === "all" || itemSource === filters.sourceType;
+    var itemSource = item.source_type || "driver_demand";
+    var sourceOk = !filters.source_type || filters.source_type === "all" || itemSource === filters.source_type;
+    var itemLoc = item.location_type;
+    var filterLoc = filters.location_type;
+    var itemChg = item.charger_type;
+    var filterChg = filters.charger_type;
     return sourceOk &&
       (!filters.status || item.status === filters.status) &&
-      (!filters.locationType || item.locationType === filters.locationType) &&
-      (!filters.chargerType || item.chargerType === filters.chargerType);
+      (!filterLoc || itemLoc === filterLoc) &&
+      (!filterChg || itemChg === filterChg);
   }
 
   function pluralVotes(count, lang) {

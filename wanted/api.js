@@ -190,10 +190,10 @@
       if (bounds.east != null) params.set("east", bounds.east);
     }
     if (filters) {
-      if (filters.sourceType) params.set("sourceType", filters.sourceType);
+      if (filters.source_type) params.set("source_type", filters.source_type);
       if (filters.status) params.set("status", filters.status);
-      if (filters.locationType) params.set("locationType", filters.locationType);
-      if (filters.chargerType) params.set("chargerType", filters.chargerType);
+      if (filters.location_type) params.set("location_type", filters.location_type);
+      if (filters.charger_type) params.set("charger_type", filters.charger_type);
     }
     var q = params.toString();
     return request(q ? "?" + q : "");
@@ -206,15 +206,15 @@
     });
   }
 
-  function nearby(point, sourceType) {
+  function nearby(point, source_type) {
     var lat = point && point.location ? point.location.latitude : (point ? point.latitude : null);
     var lng = point && point.location ? point.location.longitude : (point ? point.longitude : null);
-    var src = sourceType || (point && point.sourceType) || "driver_demand";
+    var src = source_type || (point && point.source_type) || "driver_demand";
     var params = new URLSearchParams({
       lat: String(lat),
       lng: String(lng),
       radius: "300",
-      sourceType: String(src)
+      source_type: String(src)
     });
     return request("/nearby?" + params.toString());
   }
@@ -235,15 +235,15 @@
   async function getVote(id) {
     var token = await getAuthToken();
     if (!token) {
-      return { voted: false, viewerHasVoted: false };
+      return { voted: false, viewer_has_voted: false };
     }
     return request("/" + encodeURIComponent(id) + "/vote", {
       method: "GET"
     }).catch(function (error) {
       if (error && (error.status === 401 || error.status === 404)) {
-        return { voted: false, viewerHasVoted: false };
+        return { voted: false, viewer_has_voted: false };
       }
-      return { voted: false, viewerHasVoted: false };
+      return { voted: false, viewer_has_voted: false };
     });
   }
 
@@ -259,7 +259,7 @@
       return list(null, {}).then(function (res) {
         var items = (res && res.items) || [];
         var filtered = items.filter(function (x) {
-          return Boolean(x.isAuthor);
+          return Boolean(x.is_author);
         });
         return { items: filtered };
       });
